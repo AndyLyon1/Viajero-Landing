@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1c3258">
+<title>Viajero · Prueba Cristo AR</title>
+<style>
+:root{--navy:#1c3258;--ink:#16233a;--blue:#045c95;--sky:#6699ca;--gold:#e9b75a;--bg:#eef2f7;--card:#ffffff;--muted:#56657a;--ok:#2e7d32;--warn:#b26a00;
+  --f:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--f);-webkit-tap-highlight-color:transparent}
+body{padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) env(safe-area-inset-bottom) max(16px,env(safe-area-inset-left))}
+.view{max-width:520px;margin:0 auto;padding:16px 0 28px;display:flex;flex-direction:column;gap:12px}
+h1{font-size:24px;margin:4px 0 0;color:var(--navy)}
+p{margin:0;line-height:1.5}
+.muted{color:var(--muted);font-size:14px}
+.card{background:var(--card);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;box-shadow:0 1px 2px rgba(22,35,58,.06)}
+.lbl{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase}
+.big{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--navy)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+button{font:600 16px var(--f);border-radius:999px;min-height:50px;padding:0 18px;border:2px solid var(--blue);background:#fff;color:var(--blue);cursor:pointer}
+button.pri{background:var(--blue);color:#fff}
+button.dark{background:var(--navy);border-color:var(--navy);color:#fff}
+button.full{width:100%}
+button:disabled{opacity:.4}
+ul{margin:0;padding-left:20px;line-height:1.6;font-size:15px}
+.st{display:flex;justify-content:space-between;font-size:14px;padding:4px 0;border-bottom:1px solid #eef1f5}
+.st:last-child{border:0}
+.ok{color:var(--ok);font-weight:600}.bad{color:#c62828;font-weight:600}.wait{color:var(--warn);font-weight:600}
+#arrow{width:56px;height:56px;transition:transform .2s linear}
+.st12{display:flex;align-items:center;gap:14px}
+#alert{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px);z-index:30;background:#fff;border-radius:22px;padding:14px 16px;box-shadow:0 12px 34px rgba(22,35,58,.35);display:flex;flex-direction:column;gap:10px}
+#alert b{font-size:18px;color:var(--navy)}
+#flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:29;transition:opacity .25s}
+#ar{position:fixed;inset:0;z-index:40;background:#000}
+#ar video,#ar canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.arTop{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;z-index:2}
+.pill{background:rgba(22,35,58,.72);color:#fff;border-radius:999px;padding:10px 14px;font-size:14px;font-weight:600}
+.arBot{position:absolute;left:0;right:0;bottom:0;padding:10px 12px calc(env(safe-area-inset-bottom) + 12px);display:flex;flex-direction:column;gap:8px;z-index:2}
+.arBot .row button{flex:1}
+.glass{background:rgba(255,255,255,.94);border-color:#fff}
+.x{width:46px;min-height:46px;padding:0;border-radius:23px;background:rgba(22,35,58,.72);border:0;color:#fff;font-size:20px}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:35;background:#fff;border-radius:24px 24px 0 0;padding:16px max(16px,env(safe-area-inset-left)) calc(env(safe-area-inset-bottom) + 16px);box-shadow:0 -10px 30px rgba(22,35,58,.25);display:flex;flex-direction:column;gap:10px}
+.chips{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.chips button{min-height:44px;padding:0;font-size:15px}
+input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;padding:12px;width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="flash"></div>
+
+<!-- START -->
+<section class="view" id="vStart">
+  <h1>Prueba en el cerro · Cristo AR</h1>
+  <p class="muted">Prototipo de campo de Viajero. Prueba los avisos por GPS, el zorro y la estación 12 en realidad aumentada, y graba el recorrido para calibrar los escalones.</p>
+  <div class="card">
+    <div class="lbl">Antes de subir</div>
+    <ul>
+      <li>Abre esta página con wifi o buena señal. Se guarda para funcionar sin conexión.</li>
+      <li>Carga la batería. La pantalla se queda encendida.</li>
+      <li>Al empezar, permite <b>ubicación</b>, <b>movimiento</b> y <b>cámara</b>.</li>
+      <li>En iPhone no vibra: avisa con sonido. Sube el volumen y quita el modo silencio.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="st"><span>Modo sin conexión</span><span id="sOff" class="wait">preparando…</span></div>
+    <div class="st"><span>Modelo de la estación</span><span id="sModel" class="wait">cargando…</span></div>
+  </div>
+  <button class="pri full" id="bStart">Empezar prueba</button>
+  <p class="muted">Seguridad: detente para mirar el celular. No camines mirando la pantalla en las gradas.</p>
+</section>
+
+<!-- WALK -->
+<section class="view" id="vWalk" hidden>
+  <div class="row" style="justify-content:space-between;align-items:center">
+    <h1 style="margin:0">Recorrido</h1><span id="sClock" class="muted" style="font-variant-numeric:tabular-nums">00:00</span>
+  </div>
+  <div class="card">
+    <div class="lbl">Estación 12 · Jesús muere en la cruz</div>
+    <div class="st12">
+      <svg id="arrow" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="26" fill="#e6eef8"/><path d="M28 9l11 30-11-7-11 7z" fill="#1c3258"/></svg>
+      <div><div class="big" id="sDist">— m</div><div class="muted" id="sDir">esperando GPS…</div></div>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="card"><div class="lbl">Pasos (sensor)</div><div class="big" id="sSteps">0</div></div>
+    <div class="card"><div class="lbl">Caminado</div><div class="big" id="sWalked">0 m</div></div>
+    <div class="card"><div class="lbl">Subida (GPS)</div><div class="big" id="sAlt">—</div></div>
+    <div class="card"><div class="lbl">Precisión GPS</div><div class="big" id="sAcc">—</div></div>
+  </div>
+  <div class="card">
+    <div class="st"><span>Brújula</span><span id="sHead" class="wait">—</span></div>
+    <div class="st"><span>Zorros</span><span id="sFox">aparecen solos al caminar</span></div>
+    <div class="st"><span>Puntos marcados</span><span id="sMarks">0</span></div>
+  </div>
+  <button class="dark full" id="bMark">Marcar punto (estación, descanso…)</button>
+  <div class="row"><button style="flex:1" id="bFox">Probar zorro</button><button style="flex:1" id="bSt">Abrir estación 12</button></div>
+  <button class="full" id="bSave">Guardar registro</button>
+  <p class="muted">“Marcar punto” al pasar cada estación crea la tabla para contar escalones. Al final toca “Guardar registro” y envíamelo.</p>
+</section>
+
+<!-- ALERT -->
+<div id="alert" hidden><b id="aT"></b><span id="aB" class="muted"></span><div class="row"><button class="pri" style="flex:1" id="aGo">Abrir cámara</button><button id="aNo">Luego</button></div></div>
+
+<!-- MARK SHEET -->
+<div class="sheet" id="mark" hidden>
+  <b>¿Qué hay aquí?</b>
+  <div class="chips" id="chips"></div>
+  <div class="row"><button style="flex:1" data-k="descanso">Descanso</button><button style="flex:1" data-k="foto">Buena foto</button><button style="flex:1" data-k="escalon">Nº escalón</button></div>
+  <input type="text" id="mNote" placeholder="Nota opcional (ej. escalón 640, sombra, agua)">
+  <button id="mClose">Cerrar</button>
+</div>
+
+<!-- AR -->
+<div id="ar" hidden>
+  <video id="vid" playsinline muted autoplay></video>
+  <canvas id="gl"></canvas>
+  <div class="arTop"><button class="x" id="arX" aria-label="Cerrar cámara">✕</button><span class="pill" id="arLbl"></span></div>
+  <div class="arBot">
+    <div class="row" id="rowSt"><button class="pri" id="bLife">Dar vida</button><button class="glass" id="bStone">Piedra</button></div>
+    <div class="row" id="rowFox"><button class="pri" id="bWalkFox">Caminar</button></div>
+    <div class="row"><button class="glass" id="bFront">Traer al frente</button><button class="glass" id="bNear">Más cerca</button><button class="glass" id="bFar">Más lejos</button></div>
+  </div>
+</div>
+
+<script src="three.min.js"></script>
+<script src="GLTFLoader.js"></script>
+<script>
+var META={"pivot": [-0.02772323452865719, 1.8025905265592836, 0.09338352683337131], "figTop": 2.123263241895653, "figBot": 0.37326324189565313, "scale": 0.014591176067714267, "crossH": 2.79324631762525, "crossW": 1.6231166989620012, "depth": 0.2319335572356684, "head": [-0.02772323452865719, 1.9776846393718546]};
+var ST12={lat:-17.3854843,lon:-66.1371203,r:25};
+(function(){
+var $=function(id){return document.getElementById(id)};
+function show(id){['vStart','vWalk'].forEach(function(v){$(v).hidden=v!==id})}
+
+/* ---------- offline ---------- */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(function(){return navigator.serviceWorker.ready}).then(function(){$('sOff').textContent='listo';$('sOff').className='ok'}).catch(function(){$('sOff').textContent='no disponible';$('sOff').className='bad'});
+}else{$('sOff').textContent='no disponible';$('sOff').className='bad'}
+
+/* ---------- log ---------- */
+var LOG={start:new Date().toISOString(),device:navigator.userAgent,fixes:[],marks:[],events:[]};
+function ev(t,extra){var e={t:Date.now(),type:t};if(extra)for(var k in extra)e[k]=extra[k];LOG.events.push(e)}
+
+/* ---------- audio cue (iPhone has no web vibration) ---------- */
+var AC=null;
+function chime(){
+  try{if(navigator.vibrate)navigator.vibrate([200,120,200]);}catch(e){}
+  if(!AC)return;var t=AC.currentTime;
+  [[880,0],[1318,0.18]].forEach(function(n){var o=AC.createOscillator(),g=AC.createGain();o.frequency.value=n[0];o.connect(g);g.connect(AC.destination);g.gain.setValueAtTime(0.0001,t+n[1]);g.gain.exponentialRampToValueAtTime(0.5,t+n[1]+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+n[1]+0.5);o.start(t+n[1]);o.stop(t+n[1]+0.55)});
+  var f=$('flash');f.style.opacity=.8;setTimeout(function(){f.style.opacity=0},250);
+}
+
+/* ---------- wake lock ---------- */
+var wl=null;function wake(){if(navigator.wakeLock&&document.visibilityState==='visible')navigator.wakeLock.request('screen').then(function(l){wl=l}).catch(function(){})}
+document.addEventListener('visibilitychange',wake);
+
+/* ---------- geo helpers ---------- */
+function rad(d){return d*Math.PI/180}
+function dist(a,b){var R=6371000,dl=rad(b.lat-a.lat),dn=rad(b.lon-a.lon),x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dn/2)*Math.sin(dn/2);return 2*R*Math.asin(Math.sqrt(x))}
+function bearing(a,b){var y=Math.sin(rad(b.lon-a.lon))*Math.cos(rad(b.lat)),x=Math.cos(rad(a.lat))*Math.sin(rad(b.lat))-Math.sin(rad(a.lat))*Math.cos(rad(b.lat))*Math.cos(rad(b.lon-a.lon));return (Math.atan2(y,x)*180/Math.PI+360)%360}
+var CARD=['norte','noreste','este','sureste','sur','suroeste','oeste','noroeste'];
+
+/* ---------- state ---------- */
+var pos=null,last=null,walked=0,alt0=null,altNow=null,heading=null,steps=0,t0=0;
+var st12Fired=false,foxAt=[],foxN=0;
+function planFox(){foxAt=[120+Math.random()*230,450+Math.random()*350]}
+
+/* ---------- start ---------- */
+$('bStart').onclick=function(){
+  try{AC=new (window.AudioContext||window.webkitAudioContext)();AC.resume();}catch(e){}
+  var asks=[];
+  if(window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission)asks.push(DeviceOrientationEvent.requestPermission().catch(function(){return 'denied'}));
+  if(window.DeviceMotionEvent&&DeviceMotionEvent.requestPermission)asks.push(DeviceMotionEvent.requestPermission().catch(function(){return 'denied'}));
+  Promise.all(asks).then(function(){
+    window.addEventListener('deviceorientation',onOri,true);
+    window.addEventListener('deviceorientationabsolute',onOriAbs,true);
+    window.addEventListener('devicemotion',onMotion,true);
+  });
+  if(navigator.geolocation)navigator.geolocation.watchPosition(onPos,function(e){$('sDir').textContent='Sin GPS: '+e.message},{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+  else $('sDir').textContent='Este navegador no da ubicación';
+  wake();planFox();t0=Date.now();ev('start');chime();show('vWalk');
+  setInterval(tick,1000);
+};
+
+/* ---------- sensors ---------- */
+function onOri(e){
+  ori={a:e.alpha,b:e.beta,g:e.gamma};
+  if(typeof e.webkitCompassHeading==='number'){heading=e.webkitCompassHeading;}
+  else if(e.absolute&&e.alpha!=null){heading=(360-e.alpha)%360;}
+}
+function onOriAbs(e){if(e.alpha!=null&&typeof e.webkitCompassHeading!=='number')heading=(360-e.alpha)%360;}
+var ori=null,lp=9.8,slow=9.8,above=false,lastStep=0;
+function onMotion(e){
+  var a=e.accelerationIncludingGravity;if(!a||a.x==null)return;
+  var m=Math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z);lp=lp*0.75+m*0.25;slow=slow*0.97+lp*0.03;var hp=lp-slow,t=Date.now();
+  if(!above&&hp>1.1&&t-lastStep>320){steps++;lastStep=t;above=true}
+  if(hp<0.3)above=false;
+}
+function onPos(p){
+  var c=p.coords,now={lat:c.latitude,lon:c.longitude};
+  LOG.fixes.push({t:p.timestamp,lat:c.latitude,lon:c.longitude,acc:c.accuracy,alt:c.altitude,altAcc:c.altitudeAccuracy,steps:steps,head:heading});
+  pos={lat:now.lat,lon:now.lon,acc:c.accuracy};
+  if(c.altitude!=null&&c.accuracy<40){if(alt0==null)alt0=c.altitude;altNow=c.altitude}
+  if(c.accuracy<25){if(last){var d=dist(last,now);if(d>3&&d<60){walked+=d;last=now}}else last=now}
+  checkTriggers();
+}
+function checkTriggers(){
+  if(!pos)return;
+  var d=dist(pos,ST12);
+  if(!st12Fired&&d<=ST12.r+Math.min(pos.acc,15)){st12Fired=true;ev('st12',{d:d});alertMe('Llegaste a la Estación 12','Jesús muere en la cruz. Detente, apunta a la estatua y dale vida.','st')}
+  if(foxN<foxAt.length&&walked>=foxAt[foxN]){foxN++;ev('fox',{walked:walked});alertMe('Mira a tu derecha','Hay un zorro andino cerca. Detente y saca tu celular.','fox')}
+}
+var pending=null;
+function alertMe(t,b,kind){pending=kind;$('aT').textContent=t;$('aB').textContent=b;$('alert').hidden=false;chime();setTimeout(chime,1600)}
+$('aNo').onclick=function(){$('alert').hidden=true};
+$('aGo').onclick=function(){$('alert').hidden=true;openAR(pending)};
+
+function tick(){
+  var s=Math.floor((Date.now()-t0)/1000);$('sClock').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  $('sSteps').textContent=steps.toLocaleString('es');
+  $('sWalked').textContent=Math.round(walked)+' m';
+  $('sAlt').textContent=altNow!=null&&alt0!=null?((altNow-alt0)>=0?'+':'')+Math.round(altNow-alt0)+' m':'—';
+  $('sHead').textContent=heading!=null?Math.round(heading)+'°':'sin brújula';$('sHead').className=heading!=null?'ok':'wait';
+  if(pos){
+    $('sAcc').textContent='±'+Math.round(pos.acc)+' m';
+    var d=dist(pos,ST12),b=bearing(pos,ST12);
+    $('sDist').textContent=d<1000?Math.round(d)+' m':(d/1000).toFixed(1).replace('.',',')+' km';
+    $('sDir').textContent='hacia el '+CARD[Math.round(b/45)%8]+(st12Fired?' · ya llegaste':'');
+    $('arrow').style.transform='rotate('+((heading!=null?b-heading:b))+'deg)';
+  }
+  var left=foxAt.length-foxN;$('sFox').textContent=left?('faltan '+left):'los viste todos';
+}
+
+/* ---------- marks ---------- */
+var chips=$('chips');for(var i=1;i<=14;i++){(function(n){var b=document.createElement('button');b.textContent=n;b.onclick=function(){addMark('estacion '+n)};chips.appendChild(b)})(i)}
+[].forEach.call(document.querySelectorAll('#mark [data-k]'),function(b){b.onclick=function(){addMark(b.dataset.k)}});
+function addMark(k){LOG.marks.push({t:Date.now(),kind:k,note:$('mNote').value,lat:pos&&pos.lat,lon:pos&&pos.lon,acc:pos&&pos.acc,alt:altNow,steps:steps,walked:Math.round(walked)});$('mNote').value='';$('sMarks').textContent=LOG.marks.length;$('mark').hidden=true;chime()}
+$('bMark').onclick=function(){$('mark').hidden=false};$('mClose').onclick=function(){$('mark').hidden=true};
+$('bFox').onclick=function(){openAR('fox')};$('bSt').onclick=function(){openAR('st')};
+$('bSave').onclick=function(){
+  LOG.end=new Date().toISOString();LOG.summary={steps:steps,walked:Math.round(walked),altGain:alt0!=null&&altNow!=null?Math.round(altNow-alt0):null,marks:LOG.marks.length};
+  var txt=JSON.stringify(LOG),name='cristo_recorrido_'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json';
+  var file=null;try{file=new File([txt],name,{type:'application/json'})}catch(e){}
+  if(file&&navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:'Registro Cristo AR'}).catch(function(){})}
+  else{var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();a.remove()}
+};
+
+/* ---------- 3D ---------- */
+var renderer=null,scene3,cam3,clock=new THREE.Clock(),stream=null,arKind=null,obj=null,objDist=5,raf=0;
+var statue=null,fox=null,U=null;
+function initGL(){
+  if(renderer)return;
+  renderer=new THREE.WebGLRenderer({canvas:$('gl'),antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputEncoding=THREE.sRGBEncoding;renderer.setClearColor(0,0);
+  scene3=new THREE.Scene();cam3=new THREE.PerspectiveCamera(62,1,0.05,80);
+  scene3.add(new THREE.HemisphereLight(0xf4f8ff,0x7a6a58,0.85));
+  var key=new THREE.DirectionalLight(0xfff1dc,1.0);key.position.set(-2,5,3);scene3.add(key);
+  window.addEventListener('resize',fitGL);
+}
+function fitGL(){if(!renderer)return;var w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);cam3.aspect=w/h;cam3.updateProjectionMatrix()}
+
+/* statue */
+var glbBuf=null;
+fetch('rood.glb').then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()}).then(function(b){glbBuf=b;$('sModel').textContent='listo';$('sModel').className='ok'}).catch(function(){$('sModel').textContent='no se pudo cargar';$('sModel').className='bad'});
+function buildStatue(cb){
+  if(statue)return cb();
+  if(!glbBuf)return cb();
+  U={uTime:{value:0},uReveal:{value:0},uLife:{value:0},uHeadUp:{value:0},uTurn:{value:0},uBreath:{value:0},
+    uPivot:{value:new THREE.Vector3().fromArray(META.pivot)},uTop:{value:META.crossH},uSpan:{value:META.crossH+0.35},uStone:{value:new THREE.Color(0xe9e5dc)}};
+  new THREE.GLTFLoader().parse(glbBuf.slice(0),'',function(g){
+    var mesh=null;g.scene.traverse(function(o){if(o.isMesh)mesh=o});
+    var m=new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.82,metalness:0});
+    m.onBeforeCompile=function(sh){
+      Object.keys(U).forEach(function(k){sh.uniforms[k]=U[k]});
+      var head='uniform float uHeadUp,uTurn,uBreath; uniform vec3 uPivot; varying float vRY;\nvec3 rotHead(vec3 p,float w){vec3 q=p-uPivot;float a=-uHeadUp*w,ca=cos(a),sa=sin(a);q=vec3(q.x,q.y*ca-q.z*sa,q.y*sa+q.z*ca);float b=uTurn*w,cb=cos(b),sb=sin(b);q=vec3(q.x*cb+q.z*sb,q.y,-q.x*sb+q.z*cb);return q+uPivot;}\nvec3 rotN(vec3 n,float w){float a=-uHeadUp*w,ca=cos(a),sa=sin(a);n=vec3(n.x,n.y*ca-n.z*sa,n.y*sa+n.z*ca);float b=uTurn*w,cb=cos(b),sb=sin(b);return vec3(n.x*cb+n.z*sb,n.y,-n.x*sb+n.z*cb);}\n';
+      sh.vertexShader=head+sh.vertexShader.replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nobjectNormal=rotN(objectNormal,uv.x);').replace('#include <begin_vertex>','vec3 transformed=rotHead(position,uv.x);\ntransformed.z+=uv.y*uBreath*0.012;\ntransformed.y+=uv.y*uBreath*0.004;\nvRY=position.y;');
+      sh.fragmentShader='uniform float uReveal,uSpan,uTop,uLife,uTime; uniform vec3 uStone; varying float vRY;\n'+sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\nfloat dTop=uTop-vRY; float front=uReveal*uSpan; float k=1.0-smoothstep(front-0.3,front,dTop);\ndiffuseColor.rgb=mix(uStone,diffuseColor.rgb,k);').replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\nfloat band=1.0-clamp(abs(dTop-(front-0.12))/0.14,0.0,1.0);\nfloat revOn=step(0.001,uReveal)*step(uReveal,0.999);\ntotalEmissiveRadiance+=vec3(1.0,0.82,0.5)*band*band*0.55*revOn;');
+    };
+    mesh.material=m;
+    statue=new THREE.Group();statue.add(g.scene);
+    var c=document.createElement('canvas');c.width=c.height=256;var x=c.getContext('2d'),gr=x.createRadialGradient(128,128,0,128,128,128);gr.addColorStop(0,'rgba(255,222,150,.95)');gr.addColorStop(1,'rgba(255,214,130,0)');x.fillStyle=gr;x.fillRect(0,0,256,256);
+    var halo=new THREE.Mesh(new THREE.PlaneGeometry(0.7,0.7),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0}));
+    halo.position.set(META.head[0],META.head[1]+0.03,0.036);statue.add(halo);statue.userData.halo=halo;
+    cb();
+  },function(){cb()});
+}
+var lifeMode=0,seqT=0;
+function ease(t){t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)}
+function updStatue(dt){
+  if(!U)return;U.uTime.value+=dt;
+  if(lifeMode===1){seqT+=dt;U.uReveal.value=ease(seqT/3.6);if(seqT>3.4)U.uLife.value=Math.min(1,U.uLife.value+dt/1.6)}
+  else if(lifeMode===-1){U.uLife.value=Math.max(0,U.uLife.value-dt);if(!U.uLife.value)U.uReveal.value=Math.max(0,U.uReveal.value-dt/2.2)}
+  var L=U.uLife.value,t=U.uTime.value,cyc=Math.sin(t*0.55-1.57)*0.5+0.5;
+  U.uBreath.value=L*Math.sin(t*1.6);U.uHeadUp.value=L*(0.05+0.11*cyc);U.uTurn.value=L*Math.sin(t*0.31)*0.05;
+  statue.userData.halo.material.opacity=L*(0.32+0.1*Math.sin(t*1.2));
+}
+$('bLife').onclick=function(){lifeMode=1;seqT=U?U.uReveal.value*3.6:0;ev('darVida')};
+$('bStone').onclick=function(){lifeMode=-1};
+
+/* fox */
+function makeFox(){
+  var root=new THREE.Group();var scene={add:function(o){root.add(o)}};
+  /* palette sampled by eye from the reference photos (culpeo) */
+  var C={
+    face:0xc98745, ear:0xbf7c3e, earIn:0xeee3d0, cheek:0xf2ece1, throat:0xf4efe6,
+    saddle:0x878479, flank:0xa8906f, belly:0xe6dac4, thigh:0xc07a3c, legUp:0xc4803f, legLo:0xd49c5e, paw:0xc98a4f,
+    tail:0x847f74, tailDark:0x55514b, tip:0x1d1a17, nose:0x161312, iris:0xc28a2e, pupil:0x120f0d,
+    rock:0x6d6058, rock2:0x8a7a6e, grass:0xc9a457, grass2:0xb08a3e
+  };
+  var WHITE=new THREE.Color(0xf4f2ec);
+  var parts=[]; var tris=0;
+
+  function mk(parent,geom,hex,x,y,z,sx,sy,sz){
+    var m=new THREE.MeshStandardMaterial({color:hex,flatShading:true,roughness:0.92,metalness:0});
+    var mesh=new THREE.Mesh(geom,m);
+    mesh.position.set(x||0,y||0,z||0);
+    if(sx!==undefined) mesh.scale.set(sx,sy,sz);
+    parent.add(mesh);
+    parts.push({mesh:mesh,target:new THREE.Color(hex)});
+    tris+=geom.index?geom.index.count/3:geom.attributes.position.count/3;
+    return mesh;
+  }
+  var S=function(r,w,h){return new THREE.SphereGeometry(r,w||9,h||7);};
+  var Cone=function(r,h,n){var g=new THREE.ConeGeometry(r,h,n);g.rotateZ(-Math.PI/2);return g;}; // points +x
+
+  var BASE=0.86;
+  var fox=new THREE.Group(); fox.position.y=BASE; scene.add(fox);
+
+  /* torso: deep chest, slim waist, grey saddle over tan flanks */
+  mk(fox,S(0.5,11,8),C.flank,0,0,0,1.12,0.5,0.47);
+  mk(fox,S(0.5,11,6),C.saddle,-0.02,0.1,0,1.06,0.36,0.45);
+  mk(fox,S(0.4,9,6),C.belly,0.04,-0.16,0,1.05,0.3,0.52);
+  mk(fox,S(0.33,9,7),C.flank,0.4,0.0,0,1,1.08,0.74);
+  mk(fox,S(0.22,8,6),C.saddle,0.36,0.17,0,1.3,0.55,0.85);
+  mk(fox,S(0.17,8,6),C.throat,0.58,-0.01,0,0.7,1.15,0.72);
+  mk(fox,S(0.31,9,7),C.thigh,-0.4,-0.04,0,0.95,0.95,0.8);
+  mk(fox,S(0.24,8,6),C.saddle,-0.42,0.13,0,1.25,0.55,0.95);
+
+  /* neck + head, held up and alert */
+  var neck=new THREE.Group(); neck.position.set(0.56,0.22,0); fox.add(neck);
+  var nk=mk(neck,new THREE.CylinderGeometry(0.14,0.21,0.42,7),C.face,0.1,0.15,0); nk.rotation.z=-0.42;
+  mk(neck,S(0.13,8,6),C.throat,0.17,0.04,0,0.9,1.3,0.85);
+  var head=new THREE.Group(); head.position.set(0.24,0.34,0); neck.add(head);
+  mk(head,S(0.22,10,8),C.face,0,0,0,1.08,0.9,0.95);
+  mk(head,S(0.09,7,6),C.cheek,0.08,-0.075,0.11,1.2,0.7,0.7);
+  mk(head,S(0.09,7,6),C.cheek,0.08,-0.075,-0.11,1.2,0.7,0.7);
+  mk(head,Cone(0.11,0.44,6),C.face,0.31,-0.045,0,1,1,0.85);
+  mk(head,Cone(0.08,0.34,5),C.cheek,0.28,-0.095,0,1,0.75,0.85);
+  mk(head,S(0.045,7,5),C.nose,0.53,-0.03,0,1,0.85,1);
+  [1,-1].forEach(function(s){
+    mk(head,S(0.036,7,5),C.iris,0.16,0.065,0.118*s,0.8,0.85,0.75);
+    mk(head,S(0.018,5,4),C.pupil,0.188,0.066,0.117*s);
+    mk(head,S(0.008,4,3),0xffffff,0.193,0.078,0.112*s);
+    var ear=new THREE.Group(); ear.position.set(-0.05,0.17,0.105*s); ear.rotation.x=0.24*s; ear.rotation.z=0.12; head.add(ear);
+    mk(ear,new THREE.ConeGeometry(0.15,0.4,4),C.ear,0,0.17,0,1,1,0.62);
+    mk(ear,new THREE.ConeGeometry(0.095,0.29,4),C.earIn,0.035,0.14,0,1,1,0.42);
+    head.userData['ear'+(s>0?'L':'R')]=ear;
+  });
+
+  /* legs: long and slender, rufous above, paler tan below */
+  var legs=[];
+  function leg(x,z,phase,back){
+    var g=new THREE.Group(); g.position.set(x,-0.16,z); fox.add(g);
+    mk(g,new THREE.CylinderGeometry(back?0.095:0.08,0.05,0.34,6),back?C.thigh:C.legUp,0,-0.15,0);
+    mk(g,new THREE.CylinderGeometry(0.052,0.042,0.32,6),C.legLo,back?-0.02:0,-0.47,0);
+    mk(g,S(0.055,7,5),C.paw,0.03,-0.64,0,1.5,0.62,1);
+    g.userData.phase=phase; legs.push(g);
+  }
+  leg(0.42,0.15,0,false); leg(0.42,-0.15,Math.PI,false); leg(-0.42,0.15,Math.PI,true); leg(-0.42,-0.15,0,true);
+
+  /* tail: long, bushy, held low, grizzled grey with a black tip */
+  var tailRoot=new THREE.Group(); tailRoot.position.set(-0.62,0.12,0); tailRoot.rotation.z=1.0; fox.add(tailRoot);
+  var tailSegs=[]; var cur=tailRoot;
+  var radii=[0.1,0.15,0.17,0.17,0.15,0.11], cols=[C.tail,C.tail,C.tail,C.tailDark,C.tip,C.tip];
+  for(var i=0;i<6;i++){
+    var sg=new THREE.Group(); sg.position.set(i===0?0:-0.17,0,0); sg.rotation.z=i===0?0:-0.06; cur.add(sg);
+    mk(sg,S(radii[i],8,6),cols[i],-0.09,0,0,1.45,1,1);
+    if(i<4) mk(sg,S(radii[i]*0.6,6,4),C.tailDark,-0.09,radii[i]*0.62,0,1.6,0.5,0.8);
+    tailSegs.push(sg); cur=sg;
+  }
+
+
+  root.scale.setScalar(0.45);
+  var api={group:root,walking:false,t:0,update:function(dt){
+    api.t+=dt;var t=api.t,walking=api.walking;
+    fox.scale.y=1+Math.sin(t*2.2)*0.012;head.rotation.y=Math.sin(t*0.5)*0.35;head.rotation.z=Math.sin(t*0.37+1)*0.06;
+    var el=head.userData.earL,er=head.userData.earR;if(el){el.rotation.z=0.12+Math.max(0,Math.sin(t*1.3))*0.12;er.rotation.z=0.12+Math.max(0,Math.sin(t*1.1+2))*0.12}
+    tailRoot.rotation.y=Math.sin(t*(walking?4:2.4))*(walking?0.22:0.4);
+    tailSegs.forEach(function(s,i){s.rotation.y=Math.sin(t*(walking?4:2.4)-i*0.7)*0.14});
+    if(walking){api.ph=(api.ph||0)+dt*7.5;legs.forEach(function(g){g.rotation.z=Math.sin(api.ph+g.userData.phase)*0.6});fox.position.y=BASE+Math.abs(Math.sin(api.ph))*0.025;
+      root.position.x+=Math.cos(root.rotation.y)*dt*0.35*1;root.position.z-=Math.sin(root.rotation.y)*dt*0.35*1;}
+    else{legs.forEach(function(g){g.rotation.z*=0.85});fox.position.y+=(BASE-fox.position.y)*0.2}
+  }};
+  return api;
+}
+$('bWalkFox').onclick=function(){if(!fox)return;fox.walking=!fox.walking;$('bWalkFox').textContent=fox.walking?'Quieto':'Caminar'};
+
+/* device orientation -> camera */
+var zee=new THREE.Vector3(0,0,1),eul=new THREE.Euler(),q0=new THREE.Quaternion(),q1=new THREE.Quaternion(-Math.sqrt(0.5),0,0,Math.sqrt(0.5));
+function camFromOri(){
+  if(!ori||ori.a==null)return;
+  var so=(screen.orientation&&screen.orientation.angle)||window.orientation||0;
+  eul.set(rad(ori.b),rad(ori.a),-rad(ori.g),'YXZ');cam3.quaternion.setFromEuler(eul);cam3.quaternion.multiply(q1);cam3.quaternion.multiply(q0.setFromAxisAngle(zee,-rad(so)));
+}
+function forwardH(){var f=new THREE.Vector3(0,0,-1).applyQuaternion(cam3.quaternion);f.y=0;if(f.lengthSq()<1e-4)f.set(0,0,-1);return f.normalize()}
+function place(relDeg){
+  if(!obj)return;var d=forwardH().applyAxisAngle(new THREE.Vector3(0,1,0),-rad(relDeg||0));
+  obj.position.set(d.x*objDist,-1.45,d.z*objDist);obj.lookAt(0,-1.45,0);
+}
+
+function openAR(kind){
+  arKind=kind;initGL();fitGL();$('ar').hidden=false;$('rowSt').hidden=kind!=='st';$('rowFox').hidden=kind!=='fox';
+  ev('ar',{kind:kind});
+  var go=function(){
+    if(obj)scene3.remove(obj);obj=null;
+    if(kind==='fox'){fox=makeFox();obj=new THREE.Group();obj.add(fox.group);fox.group.rotation.y=0;objDist=4;$('arLbl').textContent='Zorro andino · a tu derecha';}
+    else{obj=statue;objDist=6;lifeMode=0;if(U){U.uReveal.value=0;U.uLife.value=0}$('arLbl').textContent=statue?'Estación 12 · Jesús muere en la cruz':'No se cargó el modelo';}
+    if(obj)scene3.add(obj);
+    setTimeout(function(){camFromOri();
+      var rel=kind==='fox'?90:0;
+      if(kind==='st'&&pos&&heading!=null){var d=dist(pos,ST12);rel=bearing(pos,ST12)-heading;objDist=Math.max(4,Math.min(9,d||6))}
+      place(rel)},350);
+    clock.getDelta();cancelAnimationFrame(raf);loop();
+  };
+  if(kind==='st')buildStatue(go);else go();
+  if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+    navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false}).then(function(s){stream=s;$('vid').srcObject=s;$('vid').play().catch(function(){})}).catch(function(){$('arLbl').textContent='Sin cámara: permite la cámara en Ajustes › Safari'});
+  }
+}
+function closeAR(){$('ar').hidden=true;cancelAnimationFrame(raf);if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}if(fox){fox.walking=false;$('bWalkFox').textContent='Caminar'}}
+$('arX').onclick=closeAR;
+$('bFront').onclick=function(){camFromOri();place(0)};
+$('bNear').onclick=function(){objDist=Math.max(2,objDist-1);camFromOri();var p=obj&&obj.position.clone().setY(0);if(p&&p.length()>0.1){p.setLength(objDist);obj.position.set(p.x,-1.45,p.z);obj.lookAt(0,-1.45,0)}};
+$('bFar').onclick=function(){objDist=Math.min(15,objDist+1);var p=obj&&obj.position.clone().setY(0);if(p&&p.length()>0.1){p.setLength(objDist);obj.position.set(p.x,-1.45,p.z);obj.lookAt(0,-1.45,0)}};
+function loop(){
+  raf=requestAnimationFrame(loop);var dt=Math.min(0.05,clock.getDelta());
+  camFromOri();
+  if(arKind==='fox'&&fox)fox.update(dt);
+  if(arKind==='st'&&statue)updStatue(dt);
+  renderer.render(scene3,cam3);
+}
+})();
+</script>
+</body>
+</html>
