@@ -80,7 +80,13 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
     <h1 style="margin:0">Recorrido</h1><span id="sClock" class="muted" style="font-variant-numeric:tabular-nums">00:00</span>
   </div>
   <div class="card">
-    <div class="lbl">Estación 12 · Jesús muere en la cruz</div>
+    <div class="lbl">Avance (estimado)</div>
+    <div class="big" id="sStair">~0 <span style="font-size:15px;color:var(--muted)">de 1.399 escalones</span></div>
+    <div style="height:8px;border-radius:4px;background:#e6ebf2;overflow:hidden"><div id="sBar" style="height:8px;width:0;background:var(--blue)"></div></div>
+    <div class="muted" id="sStairTxt">Esperando GPS…</div>
+  </div>
+  <div class="card">
+    <div class="lbl" id="sNextLbl">Siguiente: Estación 1</div>
     <div class="st12">
       <svg id="arrow" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="26" fill="#e6eef8"/><path d="M28 9l11 30-11-7-11 7z" fill="#1c3258"/></svg>
       <div><div class="big" id="sDist">— m</div><div class="muted" id="sDir">esperando GPS…</div></div>
@@ -98,7 +104,7 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
     <div class="st"><span>Puntos marcados</span><span id="sMarks">0</span></div>
   </div>
   <button class="dark full" id="bMark">Marcar punto (estación, descanso…)</button>
-  <div class="row"><button style="flex:1" id="bFox">Probar zorro</button><button style="flex:1" id="bSt">Abrir estación 12</button></div>
+  <div class="row"><button style="flex:1" id="bFox">Probar zorro</button><button style="flex:1" id="bSt">Abrir estación cercana</button></div>
   <button class="full" id="bSave">Guardar registro</button>
   <p class="muted">“Marcar punto” al pasar cada estación crea la tabla para contar escalones. Al final toca “Guardar registro” y envíamelo.</p>
 </section>
@@ -131,7 +137,9 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
 <script src="GLTFLoader.js"></script>
 <script>
 var META={"pivot": [-0.02772323452865719, 1.8025905265592836, 0.09338352683337131], "figTop": 2.123263241895653, "figBot": 0.37326324189565313, "scale": 0.014591176067714267, "crossH": 2.79324631762525, "crossW": 1.6231166989620012, "depth": 0.2319335572356684, "head": [-0.02772323452865719, 1.9776846393718546]};
-var ST12={lat:-17.3854843,lon:-66.1371203,r:25};
+var ROUTE=[{"n": "start", "name": "Inicio de las gradas", "lat": -17.3879963, "lon": -66.140233, "est": false}, {"n": 1, "name": "Jesús es sentenciado a muerte", "lat": -17.3884835, "lon": -66.1403549, "est": false}, {"n": 2, "name": "Jesús carga con la cruz", "lat": -17.3879559, "lon": -66.1401921, "est": false}, {"n": 3, "name": "Jesús cae por primera vez", "lat": -17.3878272, "lon": -66.1397015, "est": false}, {"n": 4, "name": "Jesús encuentra a su madre", "lat": -17.3875087, "lon": -66.1392307, "est": true}, {"n": 5, "name": "El Cirineo ayuda a Jesús", "lat": -17.3871902, "lon": -66.1387598, "est": false}, {"n": 6, "name": "Verónica limpia el rostro de Jesús", "lat": -17.386861, "lon": -66.1381724, "est": false}, {"n": 7, "name": "Jesús cae por segunda vez", "lat": -17.3865727, "lon": -66.1377228, "est": false}, {"n": 8, "name": "Jesús consuela a las hijas de Jerusalén", "lat": -17.386425, "lon": -66.1373634, "est": false}, {"n": 9, "name": "Jesús cae por tercera vez", "lat": -17.3858848, "lon": -66.1377119, "est": false}, {"n": 10, "name": "Jesús es despojado de sus vestiduras", "lat": -17.38571, "lon": -66.1375087, "est": false}, {"n": 11, "name": "Jesús es clavado en la cruz", "lat": -17.3857645, "lon": -66.1372068, "est": false}, {"n": 12, "name": "Jesús muere en la cruz", "lat": -17.3854843, "lon": -66.1371203, "est": false}, {"n": 13, "name": "Jesús es bajado de la cruz", "lat": -17.3852102, "lon": -66.1364165, "est": false}, {"n": 14, "name": "Jesús es sepultado", "lat": -17.3848508, "lon": -66.1358474, "est": true}, {"n": "cristo", "name": "Cristo de la Concordia", "lat": -17.3843117, "lon": -66.1349937, "est": false}];
+var STEPS_TOTAL=1399; /* dato de la ficha; confirmar contando en sitio */
+var ST_R=15;
 (function(){
 var $=function(id){return document.getElementById(id)};
 function show(id){['vStart','vWalk'].forEach(function(v){$(v).hidden=v!==id})}
@@ -162,11 +170,20 @@ document.addEventListener('visibilitychange',wake);
 function rad(d){return d*Math.PI/180}
 function dist(a,b){var R=6371000,dl=rad(b.lat-a.lat),dn=rad(b.lon-a.lon),x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dn/2)*Math.sin(dn/2);return 2*R*Math.asin(Math.sqrt(x))}
 function bearing(a,b){var y=Math.sin(rad(b.lon-a.lon))*Math.cos(rad(b.lat)),x=Math.cos(rad(a.lat))*Math.sin(rad(b.lat))-Math.sin(rad(a.lat))*Math.cos(rad(b.lat))*Math.cos(rad(b.lon-a.lon));return (Math.atan2(y,x)*180/Math.PI+360)%360}
+function stations(){return ROUTE.filter(function(r){return typeof r.n==='number'})}
+function nextSt(){var ss=stations();if(!pos)return ss[0];var me=along(pos).s;for(var i=0;i<ss.length;i++){if(along(ss[i]).s>me+8&&!fired[ss[i].n])return ss[i]}return ROUTE[ROUTE.length-1]}
+function nearestSt(){if(!pos)return stations()[0];var best=null,bd=1e9;stations().forEach(function(s){var d=dist(pos,s);if(d<bd){bd=d;best=s}});return best}
+var PATH=ROUTE.filter(function(r){return r.n!=='start'}),CUM=[0];for(var i=1;i<PATH.length;i++)CUM.push(CUM[i-1]+distLL(PATH[i-1],PATH[i]));
+function distLL(a,b){var R=6371000,dl=(b.lat-a.lat)*Math.PI/180,dn=(b.lon-a.lon)*Math.PI/180,x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dn/2)*Math.sin(dn/2);return 2*R*Math.asin(Math.sqrt(x))}
+function along(p){var k=111320,kx=111320*Math.cos(p.lat*Math.PI/180),best=1e9,res=0;
+  for(var i=1;i<PATH.length;i++){var a=PATH[i-1],b=PATH[i],ax=(a.lon-p.lon)*kx,ay=(a.lat-p.lat)*k,bx=(b.lon-p.lon)*kx,by=(b.lat-p.lat)*k,dx=bx-ax,dy=by-ay,L=dx*dx+dy*dy,t=L?Math.max(0,Math.min(1,-(ax*dx+ay*dy)/L)):0,cx=ax+t*dx,cy=ay+t*dy,dd=Math.sqrt(cx*cx+cy*cy);
+    if(dd<best){best=dd;res=CUM[i-1]+t*(CUM[i]-CUM[i-1])}}
+  return {s:res,off:best}}
 var CARD=['norte','noreste','este','sureste','sur','suroeste','oeste','noroeste'];
 
 /* ---------- state ---------- */
 var pos=null,last=null,walked=0,alt0=null,altNow=null,heading=null,steps=0,t0=0;
-var st12Fired=false,foxAt=[],foxN=0;
+var fired={},curSt=null,foxAt=[],foxN=0;
 function planFox(){foxAt=[120+Math.random()*230,450+Math.random()*350]}
 
 /* ---------- start ---------- */
@@ -210,8 +227,8 @@ function onPos(p){
 }
 function checkTriggers(){
   if(!pos)return;
-  var d=dist(pos,ST12);
-  if(!st12Fired&&d<=ST12.r+Math.min(pos.acc,15)){st12Fired=true;ev('st12',{d:d});alertMe('Llegaste a la Estación 12','Jesús muere en la cruz. Detente, apunta a la estatua y dale vida.','st')}
+  var ns=nearestSt(),d=dist(pos,ns);
+  if(ns&&!fired[ns.n]&&d<=ST_R+Math.min(pos.acc,10)){fired[ns.n]=true;curSt=ns;ev('station',{n:ns.n,d:d});alertMe('Estación '+ns.n+' · '+ns.name,'Detente y apunta tu celular a la estatua para darle vida.'+(ns.est?' (Ubicación estimada.)':''),'st')}
   if(foxN<foxAt.length&&walked>=foxAt[foxN]){foxN++;ev('fox',{walked:walked});alertMe('Mira a tu derecha','Hay un zorro andino cerca. Detente y saca tu celular.','fox')}
 }
 var pending=null;
@@ -227,9 +244,14 @@ function tick(){
   $('sHead').textContent=heading!=null?Math.round(heading)+'°':'sin brújula';$('sHead').className=heading!=null?'ok':'wait';
   if(pos){
     $('sAcc').textContent='±'+Math.round(pos.acc)+' m';
-    var d=dist(pos,ST12),b=bearing(pos,ST12);
+    var nx=nextSt(),d=dist(pos,nx),b=bearing(pos,nx);
+    $('sNextLbl').textContent=(typeof nx.n==='number'?'Siguiente: Estación '+nx.n+' · '+nx.name:'Siguiente: Cristo de la Concordia');
     $('sDist').textContent=d<1000?Math.round(d)+' m':(d/1000).toFixed(1).replace('.',',')+' km';
-    $('sDir').textContent='hacia el '+CARD[Math.round(b/45)%8]+(st12Fired?' · ya llegaste':'');
+    $('sDir').textContent='hacia el '+CARD[Math.round(b/45)%8]+(nx.est?' · ubicación estimada':'');
+    var A=along(pos),tot=CUM[CUM.length-1],f=Math.max(0,Math.min(1,A.s/tot));
+    if(A.off<60){var st=Math.round(f*STEPS_TOTAL/10)*10;$('sStair').firstChild.nodeValue='~'+st.toLocaleString('es')+' ';$('sBar').style.width=(f*100)+'%';
+      var done=Object.keys(fired).length;$('sStairTxt').textContent='Faltan ~'+(Math.round((1-f)*STEPS_TOTAL/10)*10).toLocaleString('es')+' · '+done+' de 14 estaciones';}
+    else $('sStairTxt').textContent='Estás a '+Math.round(A.off)+' m de la ruta';
     $('arrow').style.transform='rotate('+((heading!=null?b-heading:b))+'deg)';
   }
   var left=foxAt.length-foxN;$('sFox').textContent=left?('faltan '+left):'los viste todos';
@@ -240,7 +262,7 @@ var chips=$('chips');for(var i=1;i<=14;i++){(function(n){var b=document.createEl
 [].forEach.call(document.querySelectorAll('#mark [data-k]'),function(b){b.onclick=function(){addMark(b.dataset.k)}});
 function addMark(k){LOG.marks.push({t:Date.now(),kind:k,note:$('mNote').value,lat:pos&&pos.lat,lon:pos&&pos.lon,acc:pos&&pos.acc,alt:altNow,steps:steps,walked:Math.round(walked)});$('mNote').value='';$('sMarks').textContent=LOG.marks.length;$('mark').hidden=true;chime()}
 $('bMark').onclick=function(){$('mark').hidden=false};$('mClose').onclick=function(){$('mark').hidden=true};
-$('bFox').onclick=function(){openAR('fox')};$('bSt').onclick=function(){openAR('st')};
+$('bFox').onclick=function(){openAR('fox')};$('bSt').onclick=function(){curSt=nearestSt();openAR('st')};
 $('bSave').onclick=function(){
   LOG.end=new Date().toISOString();LOG.summary={steps:steps,walked:Math.round(walked),altGain:alt0!=null&&altNow!=null?Math.round(altNow-alt0):null,marks:LOG.marks.length};
   var txt=JSON.stringify(LOG),name='cristo_recorrido_'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json';
@@ -419,11 +441,11 @@ function openAR(kind){
   var go=function(){
     if(obj)scene3.remove(obj);obj=null;
     if(kind==='fox'){fox=makeFox();obj=new THREE.Group();obj.add(fox.group);fox.group.rotation.y=-Math.PI/2+0.45;objDist=4;$('arLbl').textContent='Zorro andino · a tu derecha';}
-    else{obj=statue;objDist=6;lifeMode=0;if(U){U.uReveal.value=0;U.uLife.value=0}$('arLbl').textContent=statue?'Estación 12 · Jesús muere en la cruz':'No se cargó el modelo';}
+    else{var cs=curSt||nearestSt();curSt=cs;obj=statue;objDist=6;lifeMode=0;if(U){U.uReveal.value=0;U.uLife.value=0}$('arLbl').textContent=statue?('Estación '+cs.n+(cs.n===12?'':' · modelo de prueba')):'No se cargó el modelo';}
     if(obj)scene3.add(obj);
     setTimeout(function(){camFromOri();
       var rel=kind==='fox'?90:0;
-      if(kind==='st'&&pos&&heading!=null){var d=dist(pos,ST12);rel=bearing(pos,ST12)-heading;objDist=Math.max(4,Math.min(9,d||6))}
+      if(kind==='st'&&pos&&heading!=null&&curSt){var d=dist(pos,curSt);rel=bearing(pos,curSt)-heading;objDist=Math.max(4,Math.min(9,d||6))}
       place(rel)},350);
     clock.getDelta();cancelAnimationFrame(raf);loop();
   };
