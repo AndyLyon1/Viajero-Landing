@@ -56,14 +56,57 @@ ul{margin:0;padding-left:20px;line-height:1.6;font-size:15px}
 input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;padding:12px;width:100%}
 [hidden]{display:none!important}
 </style>
+<link rel="stylesheet" href="leaflet.css">
+<style>
+.hero{position:relative;border-radius:20px;overflow:hidden;aspect-ratio:900/398;background:#cfd9e6}
+.hero img{width:100%;height:100%;object-fit:cover;display:block}
+.hero .cr{position:absolute;left:10px;bottom:8px;font-size:10px;color:#fff;background:rgba(0,0,0,.45);padding:3px 7px;border-radius:6px}
+.ttl{display:flex;justify-content:space-between;align-items:center}
+.ttl h1{font-size:22px;margin:0}
+.loc{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:14px}
+.arcard{background:var(--navy);color:#fff;border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.arcard .eb{font-size:11px;font-weight:700;letter-spacing:1.2px;color:#9fc0e3}
+.arcard h2{margin:0;font-size:21px}
+.arcard p{color:#dce7f4;font-size:14px}
+.chip{font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.12)}
+.arcard button{background:#fff;color:var(--navy);border-color:#fff}
+.okcard{border:1.5px solid #cfe5cf;background:#f2f8f1;border-radius:18px;padding:12px 14px}
+.okcard b{color:var(--ok)}
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));text-align:center;font-size:12px;color:#7c8594;padding-top:6px;border-top:1px solid #e1e6ee}
+.tabs .on{color:var(--blue);font-weight:700}
+.map{height:52vh;min-height:300px;border-radius:20px;overflow:hidden;z-index:0}
+.mini{height:210px;border-radius:18px;overflow:hidden;z-index:0}
+.stm{width:24px;height:24px;border-radius:12px;background:#1c3258;color:#fff;font:700 11px/24px -apple-system,sans-serif;text-align:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.stm.est{background:#fff;color:#1c3258;border:2px dashed #1c3258}
+.stm.done{background:#2e7d32}
+.crm{width:30px;height:30px;border-radius:15px;background:#e9b75a;border:3px solid #fff;color:#1c3258;font:700 16px/24px -apple-system,sans-serif;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.back{background:none;border:0;min-height:44px;padding:0 8px 0 0;color:var(--navy);font-size:24px}
+</style>
 </head>
 <body>
 <div id="flash"></div>
 
-<!-- START -->
-<section class="view" id="vStart">
-  <h1>Prueba en el cerro · Cristo AR</h1>
-  <p class="muted">Prototipo de campo de Viajero. Prueba los avisos por GPS, el zorro y la estación 12 en realidad aumentada, y graba el recorrido para calibrar los escalones.</p>
+<!-- FICHA (como en la app) -->
+<section class="view" id="vFicha">
+  <div class="hero"><img src="hero.jpg" alt="Vista aérea del Cristo de la Concordia sobre Cochabamba"><span class="cr">Foto: Parallelepiped09 · CC BY-SA 4.0 · Wikimedia Commons</span></div>
+  <div class="ttl"><h1>Cristo de la Concordia</h1><svg width="26" height="26" viewBox="0 0 24 24" fill="#e0453a" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z"/></svg></div>
+  <div class="loc"><svg width="14" height="14" viewBox="0 0 24 24" fill="#045c95" aria-hidden="true"><path d="M12 2a7 7 0 00-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 1112 6a2.5 2.5 0 010 5.5z"/></svg>Cochabamba - Bolivia</div>
+  <div class="arcard">
+    <div class="eb">NUEVO · REALIDAD AUMENTADA</div>
+    <h2>Camino de las Estaciones</h2>
+    <p>Sube por el Vía Crucis del cerro San Pedro y mira cómo las estaciones cobran vida en tu celular. Funciona sin señal.</p>
+    <div class="row" style="gap:6px"><span class="chip">14 estaciones</span><span class="chip">Animales del cerro</span><span class="chip">Sin señal</span></div>
+    <button class="full" id="bVer">Ver experiencia</button>
+  </div>
+  <div class="okcard"><b>Sin bloqueos reportados</b><div class="muted" style="font-size:13px">La ABC no reporta incidentes cerca de este destino.</div></div>
+  <div class="tabs"><span class="on">Explorar</span><span>Negocios</span><span>Social</span><span>Rutas</span></div>
+</section>
+
+<!-- EXPERIENCIA + MAPA -->
+<section class="view" id="vStart" hidden>
+  <div class="row" style="align-items:center;gap:4px"><button class="back" id="bBack" aria-label="Volver a la ficha">‹</button><h1 style="margin:0;font-size:20px">Camino de las Estaciones</h1></div>
+  <div id="map" class="map" role="img" aria-label="Mapa del Vía Crucis con las 14 estaciones hasta el Cristo"></div>
+  <p class="muted">14 estaciones desde el inicio de las gradas hasta el Cristo. Las estaciones con borde punteado tienen ubicación estimada.</p>
   <div class="card">
     <div class="lbl">Antes de subir</div>
     <ul>
@@ -86,6 +129,7 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
   <div class="row" style="justify-content:space-between;align-items:center">
     <h1 style="margin:0">Recorrido</h1><span id="sClock" class="muted" style="font-variant-numeric:tabular-nums">00:00</span>
   </div>
+  <div id="mini" class="mini" role="img" aria-label="Tu posición en el recorrido"></div>
   <div class="card">
     <div class="lbl">Avance (estimado)</div>
     <div class="big" id="sStair">~0 <span style="font-size:15px;color:var(--muted)">de 1.399 escalones</span></div>
@@ -144,6 +188,7 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
 
 <script src="three.min.js"></script>
 <script src="GLTFLoader.js"></script>
+<script src="leaflet.js"></script>
 <script>
 var META={"pivot": [-0.02772323452865719, 1.8025905265592836, 0.09338352683337131], "figTop": 2.123263241895653, "figBot": 0.37326324189565313, "scale": 0.014591176067714267, "crossH": 2.79324631762525, "crossW": 1.6231166989620012, "depth": 0.2319335572356684, "head": [-0.02772323452865719, 1.9776846393718546]};
 var ROUTE=[{"n": "start", "name": "Inicio de las gradas", "lat": -17.3879963, "lon": -66.140233, "est": false}, {"n": 1, "name": "Jesús es sentenciado a muerte", "lat": -17.3884835, "lon": -66.1403549, "est": false}, {"n": 2, "name": "Jesús carga con la cruz", "lat": -17.3879559, "lon": -66.1401921, "est": false}, {"n": 3, "name": "Jesús cae por primera vez", "lat": -17.3878272, "lon": -66.1397015, "est": false}, {"n": 4, "name": "Jesús encuentra a su madre", "lat": -17.3875087, "lon": -66.1392307, "est": true}, {"n": 5, "name": "El Cirineo ayuda a Jesús", "lat": -17.3871902, "lon": -66.1387598, "est": false}, {"n": 6, "name": "Verónica limpia el rostro de Jesús", "lat": -17.386861, "lon": -66.1381724, "est": false}, {"n": 7, "name": "Jesús cae por segunda vez", "lat": -17.3865727, "lon": -66.1377228, "est": false}, {"n": 8, "name": "Jesús consuela a las hijas de Jerusalén", "lat": -17.386425, "lon": -66.1373634, "est": false}, {"n": 9, "name": "Jesús cae por tercera vez", "lat": -17.3858848, "lon": -66.1377119, "est": false}, {"n": 10, "name": "Jesús es despojado de sus vestiduras", "lat": -17.38571, "lon": -66.1375087, "est": false}, {"n": 11, "name": "Jesús es clavado en la cruz", "lat": -17.3857645, "lon": -66.1372068, "est": false}, {"n": 12, "name": "Jesús muere en la cruz", "lat": -17.3854843, "lon": -66.1371203, "est": false}, {"n": 13, "name": "Jesús es bajado de la cruz", "lat": -17.3852102, "lon": -66.1364165, "est": false}, {"n": 14, "name": "Jesús es sepultado", "lat": -17.3848508, "lon": -66.1358474, "est": true}, {"n": "cristo", "name": "Cristo de la Concordia", "lat": -17.3843117, "lon": -66.1349937, "est": false}];
@@ -151,7 +196,7 @@ var STEPS_TOTAL=1399; /* dato de la ficha; confirmar contando en sitio */
 var ST_R=15;
 (function(){
 var $=function(id){return document.getElementById(id)};
-function show(id){['vStart','vWalk'].forEach(function(v){$(v).hidden=v!==id})}
+function show(id){['vFicha','vStart','vWalk'].forEach(function(v){$(v).hidden=v!==id});window.scrollTo(0,0)}
 
 /* ---------- offline ---------- */
 if('serviceWorker' in navigator){
@@ -208,7 +253,7 @@ $('bStart').onclick=function(){
   });
   if(navigator.geolocation)navigator.geolocation.watchPosition(onPos,function(e){$('sDir').textContent='Sin GPS: '+e.message},{enableHighAccuracy:true,maximumAge:0,timeout:20000});
   else $('sDir').textContent='Este navegador no da ubicación';
-  wake();planFox();t0=Date.now();ev('start');chime();show('vWalk');
+  wake();planFox();t0=Date.now();ev('start');chime();show('vWalk');setTimeout(function(){makeMap('mini',false);maps.mini&&maps.mini.invalidateSize();refreshMaps()},80);
   setInterval(tick,1000);
 };
 
@@ -263,6 +308,7 @@ function tick(){
     else $('sStairTxt').textContent='Estás a '+Math.round(A.off)+' m de la ruta';
     $('arrow').style.transform='rotate('+((heading!=null?b-heading:b))+'deg)';
   }
+  refreshMaps();
   var left=foxAt.length-foxN;$('sFox').textContent=left?('faltan '+left):'los viste todos';
 }
 
@@ -279,6 +325,33 @@ $('bSave').onclick=function(){
   if(file&&navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:'Registro Cristo AR'}).catch(function(){})}
   else{var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();a.remove()}
 };
+
+/* ---------- maps ---------- */
+var maps={},meMarkers={};
+function stIcon(r){
+  if(r.n==='cristo')return L.divIcon({className:'',html:'<div class="crm">✝</div>',iconSize:[30,30],iconAnchor:[15,15]});
+  if(r.n==='start')return L.divIcon({className:'',html:'<div class="stm" style="background:#045c95">▶</div>',iconSize:[24,24],iconAnchor:[12,12]});
+  return L.divIcon({className:'',html:'<div class="stm'+(r.est?' est':'')+(fired[r.n]?' done':'')+'">'+r.n+'</div>',iconSize:[24,24],iconAnchor:[12,12]});
+}
+function makeMap(id,interactive){
+  if(maps[id]||!window.L)return maps[id];
+  var m=L.map(id,{zoomControl:interactive,attributionControl:true,dragging:true,scrollWheelZoom:false});
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imágenes © Esri'}).addTo(m);
+  var line=ROUTE.filter(function(r){return r.n!=='start'}).map(function(r){return [r.lat,r.lon]});
+  L.polyline(line,{color:'#ffffff',weight:7,opacity:.9}).addTo(m);L.polyline(line,{color:'#045c95',weight:3,dashArray:'6 6'}).addTo(m);
+  m._st=[];ROUTE.forEach(function(r){var mk=L.marker([r.lat,r.lon],{icon:stIcon(r)}).addTo(m).bindPopup((typeof r.n==='number'?'Estación '+r.n+' · ':'')+r.name+(r.est?' (estimada)':''));mk._r=r;m._st.push(mk)});
+  m.fitBounds(L.latLngBounds(line).pad(0.12));maps[id]=m;return m;
+}
+function refreshMaps(){
+  Object.keys(maps).forEach(function(id){var m=maps[id];
+    m._st.forEach(function(mk){mk.setIcon(stIcon(mk._r))});
+    if(pos){if(!meMarkers[id])meMarkers[id]=L.circleMarker([pos.lat,pos.lon],{radius:8,color:'#fff',weight:3,fillColor:'#2f7cf6',fillOpacity:1}).addTo(m);else meMarkers[id].setLatLng([pos.lat,pos.lon]);
+      if(id==='mini'){var A=along(pos);if(A.off<120)m.setView([pos.lat,pos.lon],18,{animate:false})}}
+  });
+}
+$('bVer').onclick=function(){show('vStart');setTimeout(function(){makeMap('map',true);maps.map&&maps.map.invalidateSize()},50)};
+$('bBack').onclick=function(){show('vFicha')};
+if(navigator.geolocation)navigator.geolocation.getCurrentPosition(function(p){pos={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy};refreshMaps()},function(){},{enableHighAccuracy:true,timeout:15000});
 
 /* ---------- 3D ---------- */
 var renderer=null,scene3,cam3,clock=new THREE.Clock(),stream=null,arKind=null,obj=null,objDist=5,raf=0;
