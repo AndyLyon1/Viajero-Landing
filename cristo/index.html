@@ -42,6 +42,13 @@ ul{margin:0;padding-left:20px;line-height:1.6;font-size:15px}
 .arBot{position:absolute;left:0;right:0;bottom:0;padding:10px 12px calc(env(safe-area-inset-bottom) + 12px);display:flex;flex-direction:column;gap:8px;z-index:2}
 .arBot .row button{flex:1}
 .glass{background:rgba(255,255,255,.94);border-color:#fff}
+.shotbar{display:flex;gap:10px;align-items:center;justify-content:center}
+.shutter{width:74px;height:74px;min-height:74px;border-radius:37px;padding:0;background:#fff;border:6px solid rgba(255,255,255,.55);box-shadow:0 0 0 3px #1c3258 inset}
+#vid.mirror{transform:scaleX(-1)}
+#shot{position:fixed;inset:0;z-index:50;background:rgba(10,18,32,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px)}
+#shot img{max-width:100%;max-height:72vh;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#shot .row{width:100%;max-width:420px}
+#shot .row button{flex:1}
 .x{width:46px;min-height:46px;padding:0;border-radius:23px;background:rgba(22,35,58,.72);border:0;color:#fff;font-size:20px}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:35;background:#fff;border-radius:24px 24px 0 0;padding:16px max(16px,env(safe-area-inset-left)) calc(env(safe-area-inset-bottom) + 16px);box-shadow:0 -10px 30px rgba(22,35,58,.25);display:flex;flex-direction:column;gap:10px}
 .chips{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
@@ -113,6 +120,7 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
 <div id="alert" hidden><b id="aT"></b><span id="aB" class="muted"></span><div class="row"><button class="pri" style="flex:1" id="aGo">Abrir cámara</button><button id="aNo">Luego</button></div></div>
 
 <!-- MARK SHEET -->
+<div id="shot" hidden><img id="shotImg" alt="Tu foto con la experiencia"><div class="row"><button class="pri" id="shotShare">Guardar o compartir</button><button class="glass" id="shotAgain">Otra foto</button></div></div>
 <div class="sheet" id="mark" hidden>
   <b>¿Qué hay aquí?</b>
   <div class="chips" id="chips"></div>
@@ -129,7 +137,8 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
   <div class="arBot">
     <div class="row" id="rowSt"><button class="pri" id="bLife">Dar vida</button><button class="glass" id="bStone">Piedra</button></div>
     <div class="row" id="rowFox"><button class="pri" id="bWalkFox">Caminar</button></div>
-    <div class="row"><button class="glass" id="bFront">Traer al frente</button><button class="glass" id="bNear">Más cerca</button><button class="glass" id="bFar">Más lejos</button></div>
+    <div class="shotbar"><button class="glass" id="bSelfie" style="min-width:96px">Selfie</button><button class="shutter" id="bShot" aria-label="Tomar foto"></button><button class="glass" id="bFrontTop" style="min-width:96px">Al frente</button></div>
+    <div class="row"><button class="glass" id="bFront" hidden>Traer al frente</button><button class="glass" id="bNear">Más cerca</button><button class="glass" id="bFar">Más lejos</button></div>
   </div>
 </div>
 
@@ -276,7 +285,7 @@ var renderer=null,scene3,cam3,clock=new THREE.Clock(),stream=null,arKind=null,ob
 var statue=null,fox=null,U=null;
 function initGL(){
   if(renderer)return;
-  renderer=new THREE.WebGLRenderer({canvas:$('gl'),antialias:true,alpha:true});
+  renderer=new THREE.WebGLRenderer({canvas:$('gl'),antialias:true,alpha:true,preserveDrawingBuffer:true});
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputEncoding=THREE.sRGBEncoding;renderer.setClearColor(0,0);
   scene3=new THREE.Scene();cam3=new THREE.PerspectiveCamera(62,1,0.05,80);
   scene3.add(new THREE.HemisphereLight(0xf4f8ff,0x7a6a58,0.85));
@@ -450,10 +459,48 @@ function openAR(kind){
     clock.getDelta();cancelAnimationFrame(raf);loop();
   };
   if(kind==='st')buildStatue(go);else go();
+  selfie=false;$('vid').classList.remove('mirror');$('bSelfie').textContent='Selfie';startCam('environment');
+}
+var selfie=false;
+function startCam(face){
+  if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}
   if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
-    navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false}).then(function(s){stream=s;$('vid').srcObject=s;$('vid').play().catch(function(){})}).catch(function(){$('arLbl').textContent='Sin cámara: permite la cámara en Ajustes › Safari'});
+    navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:face}},audio:false}).then(function(s){stream=s;$('vid').srcObject=s;$('vid').play().catch(function(){})}).catch(function(){$('arLbl').textContent='Sin cámara: permite la cámara en Ajustes › Safari'});
   }
 }
+function selfiePose(){
+  if(!obj)return;cam3.quaternion.identity();
+  if(arKind==='fox'){obj.position.set(0.45,-0.95,-2.3);obj.rotation.set(0,0.35,0)}
+  else{obj.position.set(0.75,-1.75,-4.6);obj.rotation.set(0,-0.25,0)}
+}
+$('bSelfie').onclick=function(){
+  selfie=!selfie;$('bSelfie').textContent=selfie?'Cámara':'Selfie';$('vid').classList.toggle('mirror',selfie);
+  startCam(selfie?'user':'environment');
+  if(selfie)selfiePose();else{camFromOri();place(arKind==='fox'?30:0)}
+  ev('selfie',{on:selfie});
+};
+$('bFrontTop').onclick=function(){if(selfie)selfiePose();else{camFromOri();place(0)}};
+var shotBlob=null;
+$('bShot').onclick=function(){
+  var v=$('vid'),dpr=Math.min(devicePixelRatio,2),W=Math.round(innerWidth*dpr),H=Math.round(innerHeight*dpr);
+  var c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');
+  x.fillStyle='#000';x.fillRect(0,0,W,H);
+  if(v.videoWidth){var sc=Math.max(W/v.videoWidth,H/v.videoHeight),dw=v.videoWidth*sc,dh=v.videoHeight*sc;x.save();if(selfie){x.translate(W,0);x.scale(-1,1)}x.drawImage(v,(W-dw)/2,(H-dh)/2,dw,dh);x.restore()}
+  renderer.render(scene3,cam3);x.drawImage(renderer.domElement,0,0,W,H);
+  var label=arKind==='fox'?'Zorro andino · Cerro San Pedro':('Estación '+(curSt?curSt.n:'')+' · Cristo de la Concordia');
+  var fs=Math.round(15*dpr),pad=Math.round(12*dpr);x.font='700 '+fs+'px -apple-system,Segoe UI,sans-serif';
+  var t1='VIAJERO',t2=label,w=Math.max(x.measureText(t1).width,x.measureText(t2).width)+pad*2,h=fs*2.6+pad;
+  x.fillStyle='rgba(22,35,58,.78)';x.beginPath();if(x.roundRect)x.roundRect(pad,H-h-pad*2,w,h,pad);else x.rect(pad,H-h-pad*2,w,h);x.fill();
+  x.fillStyle='#e9b75a';x.fillText(t1,pad*2,H-h-pad*2+fs+pad*0.6);x.fillStyle='#ffffff';x.font='500 '+Math.round(fs*0.9)+'px -apple-system,Segoe UI,sans-serif';x.fillText(t2,pad*2,H-h-pad*2+fs*2.2+pad*0.6);
+  chime();ev('photo',{kind:arKind,selfie:selfie});
+  c.toBlob(function(b){shotBlob=b;$('shotImg').src=URL.createObjectURL(b);$('shot').hidden=false},'image/jpeg',0.9);
+};
+$('shotAgain').onclick=function(){$('shot').hidden=true};
+$('shotShare').onclick=function(){
+  if(!shotBlob)return;var name='viajero_cristo_'+Date.now()+'.jpg',file=null;try{file=new File([shotBlob],name,{type:'image/jpeg'})}catch(e){}
+  if(file&&navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:'Viajero · Cristo de la Concordia'}).catch(function(){})}
+  else{var a=document.createElement('a');a.href=URL.createObjectURL(shotBlob);a.download=name;document.body.appendChild(a);a.click();a.remove()}
+};
 function closeAR(){$('ar').hidden=true;cancelAnimationFrame(raf);if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}if(fox){fox.walking=false;$('bWalkFox').textContent='Caminar'}}
 $('arX').onclick=closeAR;
 $('bFront').onclick=function(){camFromOri();place(0)};
@@ -461,7 +508,7 @@ $('bNear').onclick=function(){objDist=Math.max(2,objDist-1);camFromOri();var p=o
 $('bFar').onclick=function(){objDist=Math.min(15,objDist+1);var p=obj&&obj.position.clone().setY(0);if(p&&p.length()>0.1){p.setLength(objDist);obj.position.set(p.x,-1.45,p.z);obj.lookAt(0,-1.45,0)}};
 function loop(){
   raf=requestAnimationFrame(loop);var dt=Math.min(0.05,clock.getDelta());
-  camFromOri();
+  if(!selfie)camFromOri();
   if(arKind==='fox'&&fox)fox.update(dt);
   if(arKind==='st'&&statue)updStatue(dt);
   renderer.render(scene3,cam3);
