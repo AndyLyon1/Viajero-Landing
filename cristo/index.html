@@ -88,6 +88,26 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
 .ref{font-size:12px;color:var(--muted)}
 .dato{margin-top:6px;background:#fdf5e4;border-radius:10px;padding:8px 10px;font-size:13px}
 .histsheet{z-index:45}
+#mir{position:fixed;inset:0;z-index:42;background:#000;overflow:hidden}
+#mir video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#mirLabels{position:absolute;inset:0;pointer-events:none}
+.lm{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;transition:left .12s linear,top .12s linear}
+.lm b{background:rgba(255,255,255,.95);color:#1c3258;font-size:14px;padding:6px 10px;border-radius:12px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.lm small{display:block;font-size:11px;font-weight:500;color:#56657a}
+.lm i{width:2px;height:34px;background:rgba(255,255,255,.9)}
+.mirHint{position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 16px);background:rgba(22,35,58,.78);color:#fff;border-radius:16px;padding:10px 14px;font-size:13px;text-align:center}
+#done{position:fixed;inset:0;z-index:48;background:var(--navy);color:#fff;overflow:auto;padding:calc(env(safe-area-inset-top) + 24px) max(20px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 24px) max(20px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center}
+#done h2{font-size:28px;margin:0}
+#done .bigt{font-size:64px;font-weight:800;font-variant-numeric:tabular-nums;color:#e9b75a;line-height:1}
+#done .grid{width:100%;max-width:420px}
+#done .card{background:rgba(255,255,255,.1);color:#fff;box-shadow:none;align-items:center}
+#done .lbl{color:#9fc0e3}
+#done .big{color:#fff;font-size:24px}
+#done button{width:100%;max-width:420px}
+#done .pri{background:#fff;color:var(--navy);border-color:#fff}
+#done .sec{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
+.rk{width:100%;max-width:420px;background:rgba(255,255,255,.08);border-radius:16px;padding:12px 14px;text-align:left;font-size:14px}
+.bar2{height:8px;border-radius:4px;background:rgba(0,0,0,.12);overflow:hidden}.bar2 div{height:8px;background:var(--blue)}
 .back{background:none;border:0;min-height:44px;padding:0 8px 0 0;color:var(--navy);font-size:24px}
 </style>
 </head>
@@ -124,6 +144,14 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
       <li><b>Lleva agua, gorra y protector:</b> el sol pega fuerte y casi no hay sombra.</li>
       <li><b>Entrada libre.</b> Hay guardias municipales en el camino. Si no quieres bajar a pie, en la cima está el teleférico.</li>
     </ul>
+  </div>
+  <div class="card" id="myClimbs">
+    <div class="lbl">Mis subidas al Cristo</div>
+    <div class="grid" style="gap:8px"><div><div class="big" id="cCount">0</div><div class="muted">subidas</div></div><div><div class="big" id="cBest">—</div><div class="muted">mejor tiempo</div></div></div>
+    <div style="font-size:14px;font-weight:600;margin-top:6px" id="cChTxt">Reto de noviembre: sube 8 veces</div>
+    <div class="bar2"><div id="cChBar" style="width:0"></div></div>
+    <div class="muted" style="font-size:12px">Reto patrocinado por [MARCA] · ejemplo</div>
+    <div class="row" style="margin-top:6px"><button style="flex:1" id="bDemoDone">Ver ejemplo de llegada</button><button style="flex:1" id="bMir1">Mirador</button></div>
   </div>
   <div class="card stlist" id="stList"><div class="lbl">Las 14 estaciones</div></div>
   <div class="card">
@@ -176,6 +204,7 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
   </div>
   <button class="dark full" id="bMark">Marcar punto (estación, descanso…)</button>
   <div class="row"><button style="flex:1" id="bFox">Probar zorro</button><button style="flex:1" id="bSt">Abrir estación cercana</button></div>
+  <button class="full" id="bMir2">Mirador: ¿qué estoy viendo?</button>
   <button class="full" id="bSave">Guardar registro</button>
   <p class="muted">“Marcar punto” al pasar cada estación crea la tabla para contar escalones. Al final toca “Guardar registro” y envíamelo.</p>
 </section>
@@ -185,6 +214,19 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
 
 <!-- MARK SHEET -->
 <div class="sheet histsheet" id="hist" hidden><div class="lbl" id="hLbl"></div><b style="font-size:19px;color:var(--navy)" id="hName"></b><p id="hTxt"></p><div class="dato" id="hDato" hidden></div><button id="hClose">Cerrar</button></div>
+<div id="mir" hidden><video id="mvid" playsinline muted autoplay></video><div id="mirLabels"></div>
+  <div class="arTop"><button class="x" id="mirX" aria-label="Cerrar mirador">✕</button><span class="pill">Mirador · Cristo de la Concordia</span></div>
+  <div class="mirHint" id="mirHint">Gira despacio con el celular derecho. Las etiquetas usan la brújula y tu ubicación.</div></div>
+<div id="done" hidden>
+  <div style="font-size:13px;font-weight:700;letter-spacing:1.4px;color:#9fc0e3">VIAJERO · CRISTO DE LA CONCORDIA</div>
+  <h2>¡Llegaste al Cristo!</h2>
+  <div class="bigt" id="dTime">00:00</div><div style="color:#9fc0e3;font-size:14px" id="dSub">tiempo de subida</div>
+  <div class="grid"><div class="card"><div class="lbl">Escalones</div><div class="big" id="dStairs">~1.399</div></div><div class="card"><div class="lbl">Pasos</div><div class="big" id="dSteps">0</div></div><div class="card"><div class="lbl">Subiste</div><div class="big" id="dAlt">—</div></div><div class="card"><div class="lbl">Estaciones</div><div class="big" id="dSt">0/14</div></div></div>
+  <div class="rk" id="dRank"></div>
+  <button class="pri" id="dShare">Compartir en historias</button>
+  <button class="sec" id="dMir">Abrir el mirador</button>
+  <button class="sec" id="dClose">Cerrar</button>
+</div>
 <div id="shot" hidden><img id="shotImg" alt="Tu foto con la experiencia"><div class="row"><button class="pri" id="shotShare">Guardar o compartir</button><button class="glass" id="shotAgain">Otra foto</button></div></div>
 <div class="sheet" id="mark" hidden>
   <b>¿Qué hay aquí?</b>
@@ -304,6 +346,7 @@ function checkTriggers(){
   if(!pos)return;
   var ns=nearestSt(),d=dist(pos,ns);
   if(ns&&!fired[ns.n]&&d<=ST_R+Math.min(pos.acc,10)){fired[ns.n]=true;curSt=ns;fillInfo(ns);ev('station',{n:ns.n,d:d});alertMe('Estación '+ns.n+' · '+ns.name,(ns.info||'')+' Detente y apunta tu celular a la estatua para darle vida.','st')}
+  var cr=ROUTE[ROUTE.length-1];if(!summitDone&&t0&&dist(pos,cr)<=45){summitDone=true;finishClimb(false)}
   if(foxN<foxAt.length&&walked>=foxAt[foxN]){foxN++;ev('fox',{walked:walked});alertMe('Mira a tu derecha','Hay un zorro andino cerca. Detente y saca tu celular.','fox')}
 }
 var pending=null;
@@ -324,7 +367,7 @@ function tick(){
     $('sDist').textContent=d<1000?Math.round(d)+' m':(d/1000).toFixed(1).replace('.',',')+' km';
     $('sDir').textContent='hacia el '+CARD[Math.round(b/45)%8]+(nx.est?' · ubicación estimada':'');
     var A=along(pos),tot=CUM[CUM.length-1],f=Math.max(0,Math.min(1,A.s/tot));
-    if(A.off<60){var st=Math.round(f*STEPS_TOTAL/10)*10;$('sStair').firstChild.nodeValue='~'+st.toLocaleString('es')+' ';$('sBar').style.width=(f*100)+'%';
+    if(A.off<60){var st=Math.round(f*STEPS_TOTAL/10)*10;$('sStair').firstChild.nodeValue='~'+fmtN(st)+' ';$('sBar').style.width=(f*100)+'%';
       var done=Object.keys(fired).length;$('sStairTxt').textContent='Faltan ~'+(Math.round((1-f)*STEPS_TOTAL/10)*10).toLocaleString('es')+' · '+done+' de 14 estaciones';}
     else $('sStairTxt').textContent='Estás a '+Math.round(A.off)+' m de la ruta';
     $('arrow').style.transform='rotate('+((heading!=null?b-heading:b))+'deg)';
@@ -382,6 +425,88 @@ $('bHist').onclick=function(){fillInfo(curSt||nearestSt());$('hist').hidden=fals
 $('bVer').onclick=function(){show('vStart');setTimeout(function(){makeMap('map',true);maps.map&&maps.map.invalidateSize()},50)};
 $('bBack').onclick=function(){show('vFicha')};
 if(navigator.geolocation)navigator.geolocation.getCurrentPosition(function(p){pos={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy};refreshMaps()},function(){},{enableHighAccuracy:true,timeout:15000});
+
+/* ---------- climbs (point 5) ---------- */
+var summitDone=false,LM=[
+ {n:'Pico Tunari',lat:-17.2861724,lon:-66.3933554,up:60,sub:'5.030 m'},
+ {n:'Parque Nacional Tunari',lat:-17.3471839,lon:-66.1504112,up:30},
+ {n:'Laguna Alalay',lat:-17.4078327,lon:-66.1385519,up:-10},
+ {n:'Plaza 14 de Septiembre',lat:-17.393015,lon:-66.1620421,up:0},
+ {n:'Aeropuerto Jorge Wilstermann',lat:-17.4142531,lon:-66.1788243,up:0},
+ {n:'Estadio Félix Capriles',lat:-17.3792677,lon:-66.1617936,up:0},
+ {n:'UMSS',lat:-17.394604,lon:-66.1478669,up:-6},
+ {n:'Sacaba',lat:-17.4039386,lon:-66.0401849,up:10},
+ {n:'Quillacollo',lat:-17.3975595,lon:-66.2815744,up:12}];
+function loadClimbs(){try{return JSON.parse(localStorage.getItem('vj_climbs')||'[]')}catch(e){return []}}
+function saveClimbs(a){try{localStorage.setItem('vj_climbs',JSON.stringify(a))}catch(e){}}
+function fmtN(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'.')}
+function mmss(sec){return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(Math.round(sec%60)).padStart(2,'0')}
+function renderClimbs(){
+  var a=loadClimbs().filter(function(c){return !c.demo}),now=new Date(),m=a.filter(function(c){var d=new Date(c.t);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()}).length;
+  $('cCount').textContent=a.length;var best=a.length?Math.min.apply(null,a.map(function(c){return c.dur})):null;$('cBest').textContent=best?mmss(best):'—';
+  var mes=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][now.getMonth()];
+  $('cChTxt').textContent='Reto de '+mes+': sube 8 veces · '+m+' de 8';$('cChBar').style.width=Math.min(100,m/8*100)+'%';
+}
+renderClimbs();
+var lastDone=null;
+function finishClimb(demo){
+  var dur=demo?(27*60+42):Math.round((Date.now()-t0)/1000),st=demo?2140:steps,alt=demo?265:(alt0!=null&&altNow!=null?Math.round(altNow-alt0):null),ns=demo?14:Object.keys(fired).length;
+  var all=loadClimbs(),prev=all.filter(function(c){return !c.demo}),best=prev.length?Math.min.apply(null,prev.map(function(c){return c.dur})):null;
+  if(!demo){all.push({t:Date.now(),dur:dur,steps:st,alt:alt,st:ns});saveClimbs(all);ev('summit',{dur:dur,steps:st})}
+  lastDone={dur:dur,steps:st,alt:alt,ns:ns};
+  $('dTime').textContent=mmss(dur);$('dSub').textContent=demo?'tiempo de subida · ejemplo':'tiempo de subida';$('dStairs').textContent='~'+fmtN(STEPS_TOTAL);$('dSteps').textContent=fmtN(st);
+  $('dAlt').textContent=alt!=null?alt+' m':'—';$('dSt').textContent=ns+'/14';
+  var n=prev.length+(demo?0:1),txt='';
+  if(demo)txt='Así se verá al llegar: tu tiempo, tu racha y el reto del mes.';
+  else if(!best)txt='¡Tu primera subida registrada! Vuelve para batir tu tiempo.';
+  else if(dur<best)txt='¡Nuevo récord! '+mmss(best-dur)+' más rápido que tu mejor tiempo.';
+  else txt='Tu mejor tiempo sigue siendo '+mmss(best)+'. Subida número '+n+'.';
+  $('dRank').textContent=txt;$('done').hidden=false;chime();renderClimbs();
+}
+$('bDemoDone').onclick=function(){finishClimb(true)};
+$('dClose').onclick=function(){$('done').hidden=true};
+$('dMir').onclick=function(){$('done').hidden=true;openMir()};
+$('dShare').onclick=function(){
+  var d=lastDone;if(!d)return;var c=document.createElement('canvas');c.width=1080;c.height=1920;var x=c.getContext('2d');
+  var g=x.createLinearGradient(0,0,0,1920);g.addColorStop(0,'#1c3258');g.addColorStop(1,'#045c95');x.fillStyle=g;x.fillRect(0,0,1080,1920);
+  x.textAlign='center';x.fillStyle='#9fc0e3';x.font='700 44px -apple-system,Segoe UI,sans-serif';x.fillText('VIAJERO',540,240);
+  x.fillStyle='#ffffff';x.font='800 96px -apple-system,Segoe UI,sans-serif';x.fillText('SUBÍ AL CRISTO',540,520);
+  x.fillStyle='#e9b75a';x.font='800 260px -apple-system,Segoe UI,sans-serif';x.fillText(mmss(d.dur),540,860);
+  x.fillStyle='#ffffff';x.font='600 54px -apple-system,Segoe UI,sans-serif';
+  x.fillText('~'+fmtN(STEPS_TOTAL)+' escalones · '+d.ns+'/14 estaciones',540,1060);
+  x.fillText(fmtN(d.steps)+' pasos'+(d.alt!=null?' · +'+d.alt+' m':''),540,1150);
+  x.fillStyle='#9fc0e3';x.font='500 44px -apple-system,Segoe UI,sans-serif';x.fillText('Cristo de la Concordia · Cochabamba',540,1700);x.fillText('viajeroapp.com',540,1770);
+  c.toBlob(function(b){var f=null;try{f=new File([b],'subida_cristo.png',{type:'image/png'})}catch(e){}
+    if(f&&navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f]}).catch(function(){});
+    else{var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='subida_cristo.png';document.body.appendChild(a);a.click();a.remove()}},'image/png');
+};
+
+/* ---------- summit labels (mirador) ---------- */
+var mirStream=null,mirRaf=0,HFOV=52;LM.sort(function(a,b){return dist(ROUTE[ROUTE.length-1],a)-dist(ROUTE[ROUTE.length-1],b)});
+function openMir(){
+  $('mir').hidden=false;ev('mirador');
+  if(window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission&&heading==null){DeviceOrientationEvent.requestPermission().then(function(){window.addEventListener('deviceorientation',onOri,true)}).catch(function(){})}
+  else if(heading==null){window.addEventListener('deviceorientation',onOri,true);window.addEventListener('deviceorientationabsolute',onOriAbs,true)}
+  if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false}).then(function(st){mirStream=st;$('mvid').srcObject=st;$('mvid').play().catch(function(){})}).catch(function(){$('mirHint').textContent='Sin cámara: permite la cámara en Ajustes › Safari'});
+  var box=$('mirLabels');box.innerHTML='';LM.forEach(function(l){var e=document.createElement('div');e.className='lm';e.innerHTML='<b></b><i></i>';l.el=e;box.appendChild(e)});
+  cancelAnimationFrame(mirRaf);mirLoop();
+}
+function mirLoop(){
+  mirRaf=requestAnimationFrame(mirLoop);
+  var me=pos||ROUTE[ROUTE.length-1],W=innerWidth,H=innerHeight;
+  $('mirHint').textContent=heading==null?'Esperando la brújula… mueve el celular en forma de 8.':'Gira despacio con el celular derecho. Las etiquetas usan la brújula y tu ubicación.';
+  var rows=[];
+  var tilt=(ori&&ori.b!=null)?(ori.b-90):0,horizon=H*0.45+tilt*(H/62);
+  LM.forEach(function(l){
+    var b=bearing(me,l),d=dist(me,l),rel=((b-(heading||0)+540)%360)-180;
+    if(heading==null||Math.abs(rel)>HFOV/2+6){l.el.style.display='none';return}
+    var X=W/2+rel*(W/HFOV),r=0;while(rows[r]!=null&&Math.abs(X-rows[r])<150)r++;rows[r]=X;
+    l.el.style.display='flex';l.el.style.left=X+'px';l.el.style.top=(horizon-l.up-Math.min(60,d/600)-r*46)+'px';
+    l.el.firstChild.innerHTML=l.n+'<small>'+(d<1000?Math.round(d)+' m':(d/1000).toFixed(1).replace('.',',')+' km')+(l.sub?' · '+l.sub:'')+'</small>';
+  });
+}
+function closeMir(){$('mir').hidden=true;cancelAnimationFrame(mirRaf);if(mirStream){mirStream.getTracks().forEach(function(t){t.stop()});mirStream=null}}
+$('mirX').onclick=closeMir;$('bMir1').onclick=openMir;$('bMir2').onclick=openMir;
 
 /* ---------- 3D ---------- */
 var renderer=null,scene3,cam3,clock=new THREE.Clock(),stream=null,arKind=null,obj=null,objDist=5,raf=0;
