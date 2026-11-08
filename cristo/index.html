@@ -80,6 +80,14 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
 .stm.est{background:#fff;color:#1c3258;border:2px dashed #1c3258}
 .stm.done{background:#2e7d32}
 .crm{width:30px;height:30px;border-radius:15px;background:#e9b75a;border:3px solid #fff;color:#1c3258;font:700 16px/24px -apple-system,sans-serif;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.stlist details{border-bottom:1px solid #eef1f5;padding:10px 0}.stlist details:last-child{border:0}
+.stlist summary{display:flex;gap:10px;align-items:center;font-weight:600;font-size:15px;cursor:pointer;list-style:none}
+.stlist summary::-webkit-details-marker{display:none}
+.stlist .num{flex:none;width:26px;height:26px;border-radius:13px;background:#1c3258;color:#fff;font:700 12px/26px -apple-system,sans-serif;text-align:center}
+.stlist .body{padding:8px 0 2px 36px;font-size:14px;line-height:1.5;color:var(--ink)}
+.ref{font-size:12px;color:var(--muted)}
+.dato{margin-top:6px;background:#fdf5e4;border-radius:10px;padding:8px 10px;font-size:13px}
+.histsheet{z-index:45}
 .back{background:none;border:0;min-height:44px;padding:0 8px 0 0;color:var(--navy);font-size:24px}
 </style>
 </head>
@@ -108,6 +116,17 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
   <div id="map" class="map" role="img" aria-label="Mapa del Vía Crucis con las 14 estaciones hasta el Cristo"></div>
   <p class="muted">14 estaciones desde el inicio de las gradas hasta el Cristo. Las estaciones con borde punteado tienen ubicación estimada.</p>
   <div class="card">
+    <div class="lbl">Qué esperar</div>
+    <ul>
+      <li><b>Todo es gradas:</b> más de 1.000 escalones (la ficha dice 1.399) hasta el Cristo.</li>
+      <li><b>Tiempo:</b> unos 30 a 45 minutos de subida a ritmo tranquilo, más las paradas.</li>
+      <li><b>Las estaciones:</b> 14 grupos de esculturas de 2 a 6 m que cuentan la Pasión, hechos con piedra del mismo cerro. La última, el Santo Sepulcro, tiene luces y sonido.</li>
+      <li><b>Lleva agua, gorra y protector:</b> el sol pega fuerte y casi no hay sombra.</li>
+      <li><b>Entrada libre.</b> Hay guardias municipales en el camino. Si no quieres bajar a pie, en la cima está el teleférico.</li>
+    </ul>
+  </div>
+  <div class="card stlist" id="stList"><div class="lbl">Las 14 estaciones</div></div>
+  <div class="card">
     <div class="lbl">Antes de subir</div>
     <ul>
       <li>Abre esta página con wifi o buena señal. Se guarda para funcionar sin conexión.</li>
@@ -129,6 +148,7 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
   <div class="row" style="justify-content:space-between;align-items:center">
     <h1 style="margin:0">Recorrido</h1><span id="sClock" class="muted" style="font-variant-numeric:tabular-nums">00:00</span>
   </div>
+  <div class="card" id="stNow" hidden><div class="lbl" id="stNowLbl"></div><div style="font-size:17px;font-weight:700;color:var(--navy)" id="stNowName"></div><p id="stNowTxt" style="font-size:14px"></p><div class="dato" id="stNowDato" hidden></div></div>
   <div id="mini" class="mini" role="img" aria-label="Tu posición en el recorrido"></div>
   <div class="card">
     <div class="lbl">Avance (estimado)</div>
@@ -164,6 +184,7 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
 <div id="alert" hidden><b id="aT"></b><span id="aB" class="muted"></span><div class="row"><button class="pri" style="flex:1" id="aGo">Abrir cámara</button><button id="aNo">Luego</button></div></div>
 
 <!-- MARK SHEET -->
+<div class="sheet histsheet" id="hist" hidden><div class="lbl" id="hLbl"></div><b style="font-size:19px;color:var(--navy)" id="hName"></b><p id="hTxt"></p><div class="dato" id="hDato" hidden></div><button id="hClose">Cerrar</button></div>
 <div id="shot" hidden><img id="shotImg" alt="Tu foto con la experiencia"><div class="row"><button class="pri" id="shotShare">Guardar o compartir</button><button class="glass" id="shotAgain">Otra foto</button></div></div>
 <div class="sheet" id="mark" hidden>
   <b>¿Qué hay aquí?</b>
@@ -179,7 +200,7 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
   <canvas id="gl"></canvas>
   <div class="arTop"><button class="x" id="arX" aria-label="Cerrar cámara">✕</button><span class="pill" id="arLbl"></span></div>
   <div class="arBot">
-    <div class="row" id="rowSt"><button class="pri" id="bLife">Dar vida</button><button class="glass" id="bStone">Piedra</button></div>
+    <div class="row" id="rowSt"><button class="pri" id="bLife">Dar vida</button><button class="glass" id="bStone">Piedra</button><button class="glass" id="bHist">Historia</button></div>
     <div class="row" id="rowFox"><button class="pri" id="bWalkFox">Caminar</button></div>
     <div class="shotbar"><button class="glass" id="bSelfie" style="min-width:96px">Selfie</button><button class="shutter" id="bShot" aria-label="Tomar foto"></button><button class="glass" id="bFrontTop" style="min-width:96px">Al frente</button></div>
     <div class="row"><button class="glass" id="bFront" hidden>Traer al frente</button><button class="glass" id="bNear">Más cerca</button><button class="glass" id="bFar">Más lejos</button></div>
@@ -191,7 +212,7 @@ input[type=text]{font:16px var(--f);border:2px solid #d5dce6;border-radius:14px;
 <script src="leaflet.js"></script>
 <script>
 var META={"pivot": [-0.02772323452865719, 1.8025905265592836, 0.09338352683337131], "figTop": 2.123263241895653, "figBot": 0.37326324189565313, "scale": 0.014591176067714267, "crossH": 2.79324631762525, "crossW": 1.6231166989620012, "depth": 0.2319335572356684, "head": [-0.02772323452865719, 1.9776846393718546]};
-var ROUTE=[{"n": "start", "name": "Inicio de las gradas", "lat": -17.3879963, "lon": -66.140233, "est": false}, {"n": 1, "name": "Jesús es sentenciado a muerte", "lat": -17.3884835, "lon": -66.1403549, "est": false}, {"n": 2, "name": "Jesús carga con la cruz", "lat": -17.3879559, "lon": -66.1401921, "est": false}, {"n": 3, "name": "Jesús cae por primera vez", "lat": -17.3878272, "lon": -66.1397015, "est": false}, {"n": 4, "name": "Jesús encuentra a su madre", "lat": -17.3875087, "lon": -66.1392307, "est": true}, {"n": 5, "name": "El Cirineo ayuda a Jesús", "lat": -17.3871902, "lon": -66.1387598, "est": false}, {"n": 6, "name": "Verónica limpia el rostro de Jesús", "lat": -17.386861, "lon": -66.1381724, "est": false}, {"n": 7, "name": "Jesús cae por segunda vez", "lat": -17.3865727, "lon": -66.1377228, "est": false}, {"n": 8, "name": "Jesús consuela a las hijas de Jerusalén", "lat": -17.386425, "lon": -66.1373634, "est": false}, {"n": 9, "name": "Jesús cae por tercera vez", "lat": -17.3858848, "lon": -66.1377119, "est": false}, {"n": 10, "name": "Jesús es despojado de sus vestiduras", "lat": -17.38571, "lon": -66.1375087, "est": false}, {"n": 11, "name": "Jesús es clavado en la cruz", "lat": -17.3857645, "lon": -66.1372068, "est": false}, {"n": 12, "name": "Jesús muere en la cruz", "lat": -17.3854843, "lon": -66.1371203, "est": false}, {"n": 13, "name": "Jesús es bajado de la cruz", "lat": -17.3852102, "lon": -66.1364165, "est": false}, {"n": 14, "name": "Jesús es sepultado", "lat": -17.3848508, "lon": -66.1358474, "est": true}, {"n": "cristo", "name": "Cristo de la Concordia", "lat": -17.3843117, "lon": -66.1349937, "est": false}];
+var ROUTE=[{"n": "start", "name": "Inicio de las gradas", "lat": -17.3879963, "lon": -66.140233, "est": false}, {"n": 1, "name": "Jesús es sentenciado a muerte", "lat": -17.3884835, "lon": -66.1403549, "est": false, "info": "Pilato condena a Jesús a morir crucificado, aunque no encuentra culpa en él. Aquí empieza el camino.", "ref": "Jn 19"}, {"n": 2, "name": "Jesús carga con la cruz", "lat": -17.3879559, "lon": -66.1401921, "est": false, "info": "Jesús recibe la cruz sobre sus hombros y comienza a caminar hacia el Calvario.", "ref": "Jn 19,17"}, {"n": 3, "name": "Jesús cae por primera vez", "lat": -17.3878272, "lon": -66.1397015, "est": false, "info": "Débil por los azotes, Jesús cae por primera vez bajo el peso de la cruz.", "ref": "Tradición"}, {"n": 4, "name": "Jesús encuentra a su madre", "lat": -17.3875087, "lon": -66.1392307, "est": true, "info": "En el camino, Jesús se encuentra con su madre, María.", "ref": "Tradición"}, {"n": 5, "name": "El Cirineo ayuda a Jesús", "lat": -17.3871902, "lon": -66.1387598, "est": false, "info": "Los soldados obligan a Simón de Cirene, que volvía del campo, a cargar la cruz junto a Jesús.", "ref": "Lc 23,26"}, {"n": 6, "name": "Verónica limpia el rostro de Jesús", "lat": -17.386861, "lon": -66.1381724, "est": false, "info": "Según la tradición, una mujer llamada Verónica le limpia el rostro con un paño.", "ref": "Tradición"}, {"n": 7, "name": "Jesús cae por segunda vez", "lat": -17.3865727, "lon": -66.1377228, "est": false, "info": "Jesús cae por segunda vez.", "ref": "Tradición"}, {"n": 8, "name": "Jesús consuela a las hijas de Jerusalén", "lat": -17.386425, "lon": -66.1373634, "est": false, "info": "Un grupo de mujeres llora por él. Jesús les dice: «No lloren por mí; lloren por ustedes y por sus hijos».", "ref": "Lc 23,27-28"}, {"n": 9, "name": "Jesús cae por tercera vez", "lat": -17.3858848, "lon": -66.1377119, "est": false, "info": "Ya cerca de la cima, Jesús cae por tercera vez.", "ref": "Tradición"}, {"n": 10, "name": "Jesús es despojado de sus vestiduras", "lat": -17.38571, "lon": -66.1375087, "est": false, "info": "Le quitan la ropa y los soldados se la reparten.", "ref": "Jn 19,23-24"}, {"n": 11, "name": "Jesús es clavado en la cruz", "lat": -17.3857645, "lon": -66.1372068, "est": false, "info": "Clavan a Jesús en la cruz, entre dos ladrones.", "ref": "Lc 23,33"}, {"n": 12, "name": "Jesús muere en la cruz", "lat": -17.3854843, "lon": -66.1371203, "est": false, "info": "Jesús muere en la cruz: «Padre, en tus manos encomiendo mi espíritu».", "ref": "Lc 23,46"}, {"n": 13, "name": "Jesús es bajado de la cruz", "lat": -17.3852102, "lon": -66.1364165, "est": false, "info": "Bajan el cuerpo de Jesús de la cruz y lo ponen en brazos de su madre.", "ref": "Tradición", "dato": "Estructura de ferrocemento con piedra del mismo cerro."}, {"n": 14, "name": "Jesús es sepultado", "lat": -17.3844465, "lon": -66.1352071, "est": true, "info": "José de Arimatea coloca el cuerpo de Jesús en un sepulcro nuevo, excavado en la roca.", "ref": "Mt 27,59-60", "dato": "El Santo Sepulcro: entras a un espacio oscuro que se ilumina poco a poco, con luces, sonido y una cascada, hasta un Cristo resucitado de 2,4 m del escultor Juan García. La salida mira al Cristo. Está junto al teleférico, en la cima."}, {"n": "cristo", "name": "Cristo de la Concordia", "lat": -17.3843117, "lon": -66.1349937, "est": false, "info": "Estatua de 34,2 m sin pedestal, diseñada por los escultores César y Wálter Terrazas Pardo. La plaza abre de 8:00 a 21:00."}];
 var STEPS_TOTAL=1399; /* dato de la ficha; confirmar contando en sitio */
 var ST_R=15;
 (function(){
@@ -282,7 +303,7 @@ function onPos(p){
 function checkTriggers(){
   if(!pos)return;
   var ns=nearestSt(),d=dist(pos,ns);
-  if(ns&&!fired[ns.n]&&d<=ST_R+Math.min(pos.acc,10)){fired[ns.n]=true;curSt=ns;ev('station',{n:ns.n,d:d});alertMe('Estación '+ns.n+' · '+ns.name,'Detente y apunta tu celular a la estatua para darle vida.'+(ns.est?' (Ubicación estimada.)':''),'st')}
+  if(ns&&!fired[ns.n]&&d<=ST_R+Math.min(pos.acc,10)){fired[ns.n]=true;curSt=ns;fillInfo(ns);ev('station',{n:ns.n,d:d});alertMe('Estación '+ns.n+' · '+ns.name,(ns.info||'')+' Detente y apunta tu celular a la estatua para darle vida.','st')}
   if(foxN<foxAt.length&&walked>=foxAt[foxN]){foxN++;ev('fox',{walked:walked});alertMe('Mira a tu derecha','Hay un zorro andino cerca. Detente y saca tu celular.','fox')}
 }
 var pending=null;
@@ -317,7 +338,7 @@ var chips=$('chips');for(var i=1;i<=14;i++){(function(n){var b=document.createEl
 [].forEach.call(document.querySelectorAll('#mark [data-k]'),function(b){b.onclick=function(){addMark(b.dataset.k)}});
 function addMark(k){LOG.marks.push({t:Date.now(),kind:k,note:$('mNote').value,lat:pos&&pos.lat,lon:pos&&pos.lon,acc:pos&&pos.acc,alt:altNow,steps:steps,walked:Math.round(walked)});$('mNote').value='';$('sMarks').textContent=LOG.marks.length;$('mark').hidden=true;chime()}
 $('bMark').onclick=function(){$('mark').hidden=false};$('mClose').onclick=function(){$('mark').hidden=true};
-$('bFox').onclick=function(){openAR('fox')};$('bSt').onclick=function(){curSt=nearestSt();openAR('st')};
+$('bFox').onclick=function(){openAR('fox')};$('bSt').onclick=function(){curSt=nearestSt();fillInfo(curSt);openAR('st')};
 $('bSave').onclick=function(){
   LOG.end=new Date().toISOString();LOG.summary={steps:steps,walked:Math.round(walked),altGain:alt0!=null&&altNow!=null?Math.round(altNow-alt0):null,marks:LOG.marks.length};
   var txt=JSON.stringify(LOG),name='cristo_recorrido_'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json';
@@ -339,7 +360,7 @@ function makeMap(id,interactive){
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imágenes © Esri'}).addTo(m);
   var line=ROUTE.filter(function(r){return r.n!=='start'}).map(function(r){return [r.lat,r.lon]});
   L.polyline(line,{color:'#ffffff',weight:7,opacity:.9}).addTo(m);L.polyline(line,{color:'#045c95',weight:3,dashArray:'6 6'}).addTo(m);
-  m._st=[];ROUTE.forEach(function(r){var mk=L.marker([r.lat,r.lon],{icon:stIcon(r)}).addTo(m).bindPopup((typeof r.n==='number'?'Estación '+r.n+' · ':'')+r.name+(r.est?' (estimada)':''));mk._r=r;m._st.push(mk)});
+  m._st=[];ROUTE.forEach(function(r){var mk=L.marker([r.lat,r.lon],{icon:stIcon(r)}).addTo(m).bindPopup('<b>'+(typeof r.n==='number'?'Estación '+r.n+' · ':'')+esc(r.name)+'</b>'+(r.est?' <i>(estimada)</i>':'')+(r.info?'<br>'+esc(r.info):''));mk._r=r;m._st.push(mk)});
   m.fitBounds(L.latLngBounds(line).pad(0.12));maps[id]=m;return m;
 }
 function refreshMaps(){
@@ -349,6 +370,15 @@ function refreshMaps(){
       if(id==='mini'){var A=along(pos);if(A.off<120)m.setView([pos.lat,pos.lon],18,{animate:false})}}
   });
 }
+function esc(t){var d=document.createElement('div');d.textContent=t;return d.innerHTML}
+(function(){var box=$('stList');ROUTE.forEach(function(r){if(typeof r.n!=='number'&&r.n!=='cristo')return;
+  var d=document.createElement('details');d.innerHTML='<summary><span class="num"'+(r.n==='cristo'?' style="background:#e9b75a;color:#1c3258"':'')+'>'+(r.n==='cristo'?'✝':r.n)+'</span><span>'+esc(r.name)+(r.est?' <span class="ref">(ubicación estimada)</span>':'')+'</span></summary><div class="body">'+esc(r.info||'')+(r.ref?' <span class="ref">· '+esc(r.ref)+'</span>':'')+(r.dato?'<div class="dato">'+esc(r.dato)+'</div>':'')+'</div>';box.appendChild(d)})})();
+function fillInfo(r){
+  if(!r)return;$('stNow').hidden=false;$('stNowLbl').textContent=typeof r.n==='number'?'Estación '+r.n+' de 14':'Llegada';$('stNowName').textContent=r.name;$('stNowTxt').textContent=(r.info||'')+(r.ref?' ('+r.ref+')':'');
+  $('stNowDato').hidden=!r.dato;$('stNowDato').textContent=r.dato||'';
+  $('hLbl').textContent=$('stNowLbl').textContent;$('hName').textContent=r.name;$('hTxt').textContent=$('stNowTxt').textContent;$('hDato').hidden=!r.dato;$('hDato').textContent=r.dato||'';
+}
+$('bHist').onclick=function(){fillInfo(curSt||nearestSt());$('hist').hidden=false};$('hClose').onclick=function(){$('hist').hidden=true};
 $('bVer').onclick=function(){show('vStart');setTimeout(function(){makeMap('map',true);maps.map&&maps.map.invalidateSize()},50)};
 $('bBack').onclick=function(){show('vFicha')};
 if(navigator.geolocation)navigator.geolocation.getCurrentPosition(function(p){pos={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy};refreshMaps()},function(){},{enableHighAccuracy:true,timeout:15000});
